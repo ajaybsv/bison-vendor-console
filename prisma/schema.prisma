@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Dates the UI only ever shows as calendar days (due, expiry, next review…) are
+// stored as ISO `YYYY-MM-DD` strings, matching the admin console's convention.
+
+// ---------- Organization (the vendor company using this portal) ----------
+
+model Organization {
+  id             Int     @id @default(autoincrement())
+  name           String
+  regNo          String?
+  vendorType     String?
+  tech           String?
+  primaryContact String?
+  address        String?
+  notifReminders Boolean @default(true)
+  notifDigest    Boolean @default(true)
+  notifExpiry    Boolean @default(true)
+
+  @@map("organization")
+}
+
+// ---------- Team & auth ----------
+
+model TeamMember {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  role         String    @default("Viewer")
+  status       String    @default("Invited")
+  passwordHash String?
+  inviteToken  String?   @unique
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+
+  @@map("team_members")
+}
+
+model Session {
+  id        String     @id
+  memberId  Int
+  member    TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime   @default(now())
+
+  @@index([memberId])
+  @@map("sessions")
+}
+
+// ---------- Requests from clients (we are the vendor being assessed) ----------
+
+model ClientRequest {
+  id          Int               @id @default(autoincrement())
+  client      String
+  kind        String
+  frameworks  String[]          @default([])
+  due         String?
+  contact     String?
+  qDone       Int               @default(0)
+  qTotal      Int               @default(0)
+  evDone      Int               @default(0)
+  evTotal     Int               @default(0)
+  status      String            @default("In progress")
+  reqEvidence String[]          @default([])
+  createdAt   DateTime          @default(now())
+  answers     WorkspaceAnswer[]
+
+  @@map("client_requests")
+}
+
+/// The vendor's working answer to one bank question inside one client request.
+model WorkspaceAnswer {
+  id         Int           @id @default(autoincrement())
+  requestId  Int
+  request    ClientRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  questionId String
+  value      String?
+  confirmed  Boolean       @default(false)
+
+  @@unique([requestId, questionId])
+  @@map("workspace_answers")
+}
+
+model HistoryEntry {
+  id          Int      @id @default(autoincrement())
+  client      String
+  completedOn String
+  frameworks  String[] @default([])
+  compliance  Int
+
+  @@map("history")
+}
+
+// ---------- Trust Pack ----------
+
+model TrustAnswer {
+  id        Int      @id @default(autoincrement())
+  control   String
+  q         String
+  a         String
+  updated   String?
+  used      Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("trust_answers")
+}
+
+model EvidenceItem {
+  id        Int      @id @default(autoincrement())
+  name      String
+  type      String
+  uploaded  String?
+  expiry    String?
+  freshness String   @default("fresh")
+  usedBy    String[] @default([])
+  createdAt DateTime @default(now())
+
+  @@map("evidence_items")
+}
+
+// ---------- Question bank (BISON control library slice) ----------
+
+model Question {
+  id             String   @id
+  position       Int
+  control        String
+  text           String
+  type           String
+  options        String[] @default([])
+  inTrustPack    Boolean  @default(false)
+  defaultValue   String?
+  sourceAnswerId Int?
+
+  @@map("questions")
+}
+
+// ---------- Our own vendors (we are the assessor) ----------
+
+model Vendor {
+  id                  Int             @id @default(autoincrement())
+  name                String
+  type                String
+  servicesDescription String?
+  contactName         String
+  contact             String
+  contactPhone        String?
+  owner               String
+  criticality         String
+  dataSensitivity     String
+  frameworks          String[]        @default([])
+  country             String?
+  contractStart       String?
+  cadence             String
+  nextReview          String?
+  createdAt           DateTime        @default(now())
+  requests            VendorRequest[]
+
+  @@map("vendors")
+}
+
+/// One row per cycle sent — current and past. A vendor's "current status" is
+/// never stored; it's derived from its most recent request.
+model VendorRequest {
+  id                Int                     @id @default(autoincrement())
+  vendorId          Int
+  vendor            Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  vendorName        String
+  status            String                  @default("Awaiting response")
+  cadence           String?
+  controlsSent      String[]                @default([])
+  qDone             Int                     @default(0)
+  qTotal            Int                     @default(0)
+  evidenceRequested String[]                @default([])
+  evDone            Int                     @default(0)
+  evTotal           Int                     @default(0)
+  sentOn            String
+  due               String?
+  completedOn       String?
+  responses         VendorResponse[]
+  evidence          VendorRequestEvidence[]
+
+  @@index([vendorId])
+  @@map("vendor_requests")
+}
+
+model VendorResponse {
+  id         Int           @id @default(autoincrement())
+  requestId  Int
+  request    VendorRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  questionId String
+  value      String?
+  confirmed  Boolean       @default(false)
+
+  @@unique([requestId, questionId])
+  @@map("vendor_responses")
+}
+
+model VendorRequestEvidence {
+  id         Int           @id @default(autoincrement())
+  requestId  Int
+  request    VendorRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  type       String
+  status     String        @default("requested")
+  fileName   String?
+  receivedOn String?
+
+  @@map("vendor_request_evidence")
+}

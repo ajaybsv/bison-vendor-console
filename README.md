@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BISON — Vendor portal
 
-## Getting Started
+The vendor-side console for BISON (phase 1): a vendor answers client assessments from a reusable
+Trust Pack, and assesses its own vendors. Built from `bison-vendor-console.html`.
 
-First, run the development server:
+Stack: Next.js 16 (App Router) · React 19 · Prisma 7 + Postgres · Tailwind v4 (utilities only — the
+design's own `sv-*` component CSS lives in `app/globals.css`).
+
+## Local setup
 
 ```bash
+cp .env.example .env          # point DATABASE_URL at a local Postgres database
+npm install                   # also runs `prisma generate`
+npm run db:migrate            # apply migrations
+npm run db:seed               # sample data (PayBridge Systems)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sign in as `rahul@paybridge.in` / `demo-password` (Owner). `sneha@paybridge.in` (Contributor) uses
+the same password; Vikram Shah has a pending invite you can preview from the sign-in screen.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploying on Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Same setup as the admin console:
 
-## Learn More
+1. Add a **Prisma Postgres** database to the Vercel project with the env-var prefix **`bison_vendor`**
+   (it must be a separate database from the admin console's — the migration histories differ).
+2. Vercel runs `vercel-build`: `prisma migrate deploy && next build`.
+3. Seed once if you want the sample data: `DATABASE_URL=<bison_vendor_DATABASE_URL> npm run db:seed`.
 
-To learn more about Next.js, take a look at the following resources:
+## Layout
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `app/(auth)` — sign in, invite email preview, invite sign-up
+- `app/(console)` — dashboard, requests + workspace, history, Trust Pack (answers, evidence),
+  vendors, sent requests, team, settings
+- `actions/` — server actions (each re-checks the session and role)
+- `lib/` — Prisma client, sessions, queries, derived statuses, CRUD field schemas
+- `proxy.ts` — redirects requests without a session cookie to `/sign-in`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Roles: Owner can do everything; Contributor can edit the Trust Pack, requests and vendors;
+Viewer is read-only.
