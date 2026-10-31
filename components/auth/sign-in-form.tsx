@@ -64,14 +64,9 @@ export function SignInForm({
         />
       </div>
       <div style={{ textAlign: "right", marginBottom: "var(--sv-space-5)" }}>
-        <button
-          type="button"
-          className="sv-btn sv-btn--tertiary sv-btn--sm"
-          style={{ padding: 0, height: "auto" }}
-          onClick={() => showToast("Password reset isn't wired up yet", "danger")}
-        >
+        <Link className="sv-btn sv-btn--tertiary sv-btn--sm" style={{ padding: 0, height: "auto" }} href="/forgot-password">
           Forgot password?
-        </button>
+        </Link>
       </div>
       <button className="sv-btn sv-btn--primary sv-btn--block" type="submit" disabled={pending}>
         Sign in

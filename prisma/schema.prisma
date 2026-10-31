@@ -30,15 +30,16 @@ model Organization {
 // ---------- Team & auth ----------
 
 model TeamMember {
-  id           Int       @id @default(autoincrement())
+  id           Int             @id @default(autoincrement())
   name         String
-  email        String    @unique
-  role         String    @default("Viewer")
-  status       String    @default("Invited")
+  email        String          @unique
+  role         String          @default("Viewer")
+  status       String          @default("Invited")
   passwordHash String?
-  inviteToken  String?   @unique
-  createdAt    DateTime  @default(now())
+  inviteToken  String?         @unique
+  createdAt    DateTime        @default(now())
   sessions     Session[]
+  resets       PasswordReset[]
 
   @@map("team_members")
 }
@@ -52,6 +53,19 @@ model Session {
 
   @@index([memberId])
   @@map("sessions")
+}
+
+/// A forgot-password link. `id` is the SHA-256 of the emailed token; single use, short-lived.
+model PasswordReset {
+  id        String     @id
+  memberId  Int
+  member    TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime   @default(now())
+
+  @@index([memberId])
+  @@map("password_resets")
 }
 
 // ---------- Requests from clients (we are the vendor being assessed) ----------

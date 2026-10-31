@@ -19,6 +19,20 @@ npm run dev
 Sign in as `rahul@paybridge.in` / `demo-password` (Owner). `sneha@paybridge.in` (Contributor) uses
 the same password; Vikram Shah has a pending invite you can preview from the sign-in screen.
 
+### Creating a sign-in account
+
+```bash
+NEW_USER_PASSWORD='…' npm run user:create -- you@company.com "Your Name" Owner
+```
+
+Creates or updates an active member in whatever database `DATABASE_URL` points at. The password is
+read from the environment so it never ends up in git.
+
+### Email (forgot password)
+
+Password-reset emails go through Mailjet. Set `MAILJET_API_KEY`, `MAILJET_API_SECRET` and
+`MAILJET_EMAIL` (the verified sender) in `.env` locally and in the Vercel project.
+
 ## Deploying on Vercel
 
 Same setup as the admin console:
