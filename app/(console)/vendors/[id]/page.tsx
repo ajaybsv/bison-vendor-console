@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import { LinkRow } from "@/components/ui/link-row";
 import { PageHead } from "@/components/ui/page-head";
 import { VendorProfileActions } from "@/components/vendors/vendor-profile-actions";
+import { requiredApprovers } from "@/lib/approval";
 import { classify } from "@/lib/classification";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
 import { getOrganization, getVendor, listIssues, listTeam, listVendorRequests, listVendors } from "@/lib/data";
@@ -51,6 +52,7 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
     org ?? { materialityDisruptionHours: null, materialityCustomerPct: null, materialityFinancialImpact: null },
     concentrations.length > 0
   );
+  const approvers = requiredApprovers(v, tierResult.tier, materiality.outcome, classification.outcome);
 
   return (
     <div className="sv-page">
@@ -172,6 +174,24 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
               </div>
             </WarningAlert>
           )}
+        </div>
+        <div className="col sv-card" style={{ flex: 1, minWidth: 340 }}>
+          <div className="sv-card__eyebrow">Approval workflow</div>
+          <Fact label="Approval status">
+            <StatusChip value={v.approvalStatus} />
+          </Fact>
+          <Fact label={`Required reviewers (${approvers.length})`}>
+            <div className="stack" style={{ gap: "var(--sv-space-2)", marginTop: 4 }}>
+              {approvers.map((a) => (
+                <div key={a.role}>
+                  <div style={{ fontWeight: 600 }} className="sv-body-sm">
+                    {a.role}
+                  </div>
+                  <div className="sv-caption">{a.reason}</div>
+                </div>
+              ))}
+            </div>
+          </Fact>
         </div>
       </div>
       <h2 className="sv-h3" style={{ marginBottom: "var(--sv-space-3)" }}>

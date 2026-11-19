@@ -213,6 +213,15 @@ export const SCHEMA: Record<EntityKey, EntitySchema> = {
         help: "Leave blank to use the calculated tier shown on the profile. Set this only to deliberately override it.",
       },
       { k: "tierOverrideReason", l: "Override justification", t: "textarea", ph: "Why the calculated tier doesn't fit this vendor" },
+      {
+        k: "approvalStatus",
+        l: "Approval status",
+        t: "select",
+        opts: ["Not started", "In review", "Approved", "Changes requested", "Rejected"],
+        editOnly: true,
+        def: "Not started",
+        help: "Required reviewers are calculated from the vendor's own risk profile — shown on the profile.",
+      },
       { k: "contractStart", l: "Contract start", t: "date" },
       {
         k: "cadence",

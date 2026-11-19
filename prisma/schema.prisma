@@ -194,6 +194,9 @@ model Vendor {
   disruptionToleranceHours String?
   customersAffectedPct     String?
   financialImpactEstimate String?
+  // ---- Approval workflow (6) — who must review is always derived; only the overall
+  // decision status is tracked here. ----
+  approvalStatus      String          @default("Not started")
   createdAt           DateTime        @default(now())
   requests            VendorRequest[]
 

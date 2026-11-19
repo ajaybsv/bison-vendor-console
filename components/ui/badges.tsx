@@ -44,6 +44,10 @@ const STATUS: Record<string, [Tone, IconName | null]> = {
   Pending: ["neutral", "clock"],
   Reviewed: ["success", "checkCircle"],
   "Concern raised": ["danger", "alertTriangle"],
+  "In review": ["brand", "clock"],
+  Approved: ["success", "checkCircle"],
+  "Changes requested": ["warning", "alertTriangle"],
+  Rejected: ["danger", "alertOctagon"],
 };
 
 export function StatusChip({ value }: { value: string }) {
