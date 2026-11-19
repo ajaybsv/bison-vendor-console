@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Chips, ClassificationChip, CriticalityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
+import { Chips, ClassificationChip, CriticalityChip, MaterialityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
 import { Icon } from "@/components/ui/icon";
 import { LinkRow } from "@/components/ui/link-row";
 import { PageHead } from "@/components/ui/page-head";
 import { VendorProfileActions } from "@/components/vendors/vendor-profile-actions";
 import { classify } from "@/lib/classification";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
-import { getVendor, listIssues, listTeam, listVendorRequests, listVendors } from "@/lib/data";
+import { getOrganization, getVendor, listIssues, listTeam, listVendorRequests, listVendors } from "@/lib/data";
 import { fmtDate, todayISO } from "@/lib/format";
+import { calculateMateriality } from "@/lib/materiality";
 import { questionCountsByControl } from "@/lib/questions";
 import { requestsFor, reviewState, vendorStatus } from "@/lib/status";
 import { calculateTier } from "@/lib/tiering";
@@ -30,12 +31,13 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
   const { id } = await params;
   const v = await getVendor(Number(id));
   if (!v) notFound();
-  const [cycles, team, questionCounts, allVendors, allIssues] = await Promise.all([
+  const [cycles, team, questionCounts, allVendors, allIssues, org] = await Promise.all([
     listVendorRequests(),
     listTeam(),
     questionCountsByControl(),
     listVendors(),
     listIssues(),
+    getOrganization(),
   ]);
   const today = todayISO();
   const reqs = requestsFor(cycles, v.id);
@@ -44,6 +46,11 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
   const concentrations = concentrationsFor(v.id, findConcentrations(allVendors));
   const tierResult = calculateTier(v, concentrations.length > 0);
   const classification = classify(v);
+  const materiality = calculateMateriality(
+    v,
+    org ?? { materialityDisruptionHours: null, materialityCustomerPct: null, materialityFinancialImpact: null },
+    concentrations.length > 0
+  );
 
   return (
     <div className="sv-page">
@@ -69,6 +76,9 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
             </Fact>
             <Fact label="IT Outsourcing classification">
               <ClassificationChip value={classification.outcome} />
+            </Fact>
+            <Fact label="Materiality">
+              <MaterialityChip value={materiality.outcome} />
             </Fact>
             <Fact label="Data accessed">
               <div className="sv-body-sm">{v.dataSensitivity}</div>
@@ -99,6 +109,16 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
           </Fact>
           <Fact label="Why this classification">
             <div className="sv-body-sm">{classification.reason}</div>
+          </Fact>
+          <Fact label="Why this materiality">
+            <div className="sv-body-sm">{materiality.reasons.join("; ")}</div>
+          </Fact>
+          <Fact label="Impact inputs">
+            <div className="sv-body-sm">
+              Disruption tolerance: {v.disruptionToleranceHours ? `${v.disruptionToleranceHours}h` : "—"} · Customers affected:{" "}
+              {v.customersAffectedPct ? `${v.customersAffectedPct}%` : "—"} · Financial impact:{" "}
+              {v.financialImpactEstimate ? `₹${Number(v.financialImpactEstimate).toLocaleString("en-IN")}` : "—"}
+            </div>
           </Fact>
           <VendorProfileActions
             vendor={v}

@@ -15,6 +15,12 @@ export type OrgProfile = {
 
 export type NotificationKey = "notifReminders" | "notifDigest" | "notifExpiry";
 
+export type MaterialityThresholds = {
+  materialityDisruptionHours: string;
+  materialityCustomerPct: string;
+  materialityFinancialImpact: string;
+};
+
 async function orgId(): Promise<number | null> {
   const org = await prisma.organization.findFirst({ orderBy: { id: "asc" }, select: { id: true } });
   return org?.id ?? null;
@@ -47,5 +53,34 @@ export async function setNotification(key: NotificationKey, enabled: boolean): P
   if (!id) return { ok: false, error: "Save the organization profile first" };
   await prisma.organization.update({ where: { id }, data: { [key]: enabled } });
   revalidatePath("/settings");
+  return { ok: true };
+}
+
+/** Numeric strings or blank only — materiality compares these against each vendor's own
+ * measurable inputs, so a non-numeric threshold would silently never trigger. */
+function numericOrBlank(v: string): string | null {
+  const t = v.trim();
+  if (t === "") return null;
+  if (!Number.isFinite(Number(t))) throw new Error("not numeric");
+  return t;
+}
+
+export async function saveMaterialityThresholds(thresholds: MaterialityThresholds): Promise<ActionResult> {
+  const auth = await authorize("settings");
+  if ("ok" in auth) return auth;
+  let data: Record<string, string | null>;
+  try {
+    data = {
+      materialityDisruptionHours: numericOrBlank(thresholds.materialityDisruptionHours),
+      materialityCustomerPct: numericOrBlank(thresholds.materialityCustomerPct),
+      materialityFinancialImpact: numericOrBlank(thresholds.materialityFinancialImpact),
+    };
+  } catch {
+    return { ok: false, error: "Thresholds must be numbers" };
+  }
+  const id = await orgId();
+  if (!id) return { ok: false, error: "Save the organization profile first" };
+  await prisma.organization.update({ where: { id }, data });
+  revalidatePath("/", "layout");
   return { ok: true };
 }

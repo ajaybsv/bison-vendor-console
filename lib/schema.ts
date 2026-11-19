@@ -143,6 +143,26 @@ export const SCHEMA: Record<EntityKey, EntitySchema> = {
       { k: "frameworks", l: "Applicable frameworks", t: "checklist", opts: FRAMEWORKS, help: "Which of your own regulatory obligations this vendor touches." },
       { k: "country", l: "Country / jurisdiction", t: "select", opts: ["India", "United States", "Singapore", "United Kingdom", "Ireland", "Germany", "Other"] },
       {
+        k: "disruptionToleranceHours",
+        l: "Disruption tolerance (hours)",
+        t: "text",
+        ph: "e.g. 4",
+        help: "Maximum time the business can continue if this vendor fails. Compared against the organisation's materiality threshold.",
+      },
+      {
+        k: "customersAffectedPct",
+        l: "Customers affected if this vendor fails (%)",
+        t: "text",
+        ph: "e.g. 35",
+      },
+      {
+        k: "financialImpactEstimate",
+        l: "Estimated financial impact (₹)",
+        t: "text",
+        ph: "e.g. 5000000",
+        help: "A reasonable estimate is enough — this feeds the materiality check, not an exact figure.",
+      },
+      {
         k: "legalEntity",
         l: "Legal entity delivering the service",
         t: "text",

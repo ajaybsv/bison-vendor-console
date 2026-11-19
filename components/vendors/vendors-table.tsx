@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteRecord } from "@/actions/entity-actions";
 import { EntityFormDrawer } from "@/components/entity/entity-form-drawer";
-import { ClassificationChip, CriticalityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
+import { ClassificationChip, CriticalityChip, MaterialityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SearchInput } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
@@ -15,10 +15,11 @@ import { useToast } from "@/components/toast/toast-provider";
 import { classify } from "@/lib/classification";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
 import { fmtDate } from "@/lib/format";
+import { calculateMateriality } from "@/lib/materiality";
 import { SCHEMA } from "@/lib/schema";
 import { isInFlight, latestRequestFor, reviewState, vendorStatus } from "@/lib/status";
 import { calculateTier } from "@/lib/tiering";
-import type { Vendor, VendorRequest } from "@/lib/types";
+import type { Organization, Vendor, VendorRequest } from "@/lib/types";
 
 export function sendTargetFor(v: Vendor, cycles: VendorRequest[]): SendTarget {
   const latest = latestRequestFor(cycles, v.id);
@@ -32,6 +33,7 @@ export function VendorsTable({
   questionCounts,
   today,
   initialSendId,
+  org,
 }: {
   vendors: Vendor[];
   cycles: VendorRequest[];
@@ -39,6 +41,7 @@ export function VendorsTable({
   questionCounts: Record<string, number>;
   today: string;
   initialSendId: number | null;
+  org: Organization | null;
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -109,6 +112,7 @@ export function VendorsTable({
                 <th>Criticality</th>
                 <th>Tier</th>
                 <th>IT Outsourcing</th>
+                <th>Materiality</th>
                 <th>Owner</th>
                 <th>Status</th>
                 <th>Timeline</th>
@@ -142,6 +146,17 @@ export function VendorsTable({
                     </td>
                     <td>
                       <ClassificationChip value={classify(v).outcome} />
+                    </td>
+                    <td>
+                      <MaterialityChip
+                        value={
+                          calculateMateriality(
+                            v,
+                            org ?? { materialityDisruptionHours: null, materialityCustomerPct: null, materialityFinancialImpact: null },
+                            hasConcentration
+                          ).outcome
+                        }
+                      />
                     </td>
                     <td className="sv-body-sm">{v.owner}</td>
                     <td>

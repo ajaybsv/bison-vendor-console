@@ -1,5 +1,5 @@
 import { VendorsTable } from "@/components/vendors/vendors-table";
-import { listTeam, listVendorRequests, listVendors } from "@/lib/data";
+import { getOrganization, listTeam, listVendorRequests, listVendors } from "@/lib/data";
 import { todayISO } from "@/lib/format";
 import { questionCountsByControl } from "@/lib/questions";
 
@@ -7,11 +7,12 @@ export const metadata = { title: "Vendors — BISON" };
 
 export default async function VendorsPage({ searchParams }: PageProps<"/vendors">) {
   const { send } = await searchParams;
-  const [vendors, cycles, team, questionCounts] = await Promise.all([
+  const [vendors, cycles, team, questionCounts, org] = await Promise.all([
     listVendors(),
     listVendorRequests(),
     listTeam(),
     questionCountsByControl(),
+    getOrganization(),
   ]);
   return (
     <VendorsTable
@@ -21,6 +22,7 @@ export default async function VendorsPage({ searchParams }: PageProps<"/vendors"
       questionCounts={questionCounts}
       today={todayISO()}
       initialSendId={typeof send === "string" ? Number(send) : null}
+      org={org}
     />
   );
 }

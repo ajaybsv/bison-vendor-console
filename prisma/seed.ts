@@ -25,7 +25,7 @@ async function main() {
   // Fixed ids are referenced across tables (sourceAnswerId, vendorId), so restart sequences too.
   await prisma.$executeRawUnsafe(
     `TRUNCATE organization, team_members, sessions, client_requests, workspace_answers, history, trust_answers,
-     evidence_items, questions, vendors, vendor_requests, vendor_responses, vendor_request_evidence
+     evidence_items, questions, vendors, vendor_requests, vendor_responses, vendor_request_evidence, issues
      RESTART IDENTITY CASCADE`
   );
 
@@ -37,6 +37,9 @@ async function main() {
       tech: "Cloud",
       primaryContact: "Rahul Mehta · rahul@paybridge.in",
       address: "Bandra Kurla Complex, Mumbai, India",
+      materialityDisruptionHours: "8",
+      materialityCustomerPct: "20",
+      materialityFinancialImpact: "10000000",
     },
   });
 
@@ -117,6 +120,7 @@ async function main() {
       legalEntity: "Nimbus Cloud Infrastructure Inc.", cloudProviders: "AWS, Cloudflare", subcontractors: "Equinix Data Centers",
       internalDependencies: "Loan origination platform, mobile app backend, payment gateway API",
       alternativeProviders: "Limited", dependencyReviewStatus: "Reviewed",
+      disruptionToleranceHours: "4", customersAffectedPct: "60", financialImpactEstimate: "15000000",
     },
   });
   // Shares both a cloud provider (AWS) and a subcontractor (Equinix) with Nimbus — the concentration demo.

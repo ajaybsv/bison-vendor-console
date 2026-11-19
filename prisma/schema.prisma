@@ -23,6 +23,11 @@ model Organization {
   notifReminders Boolean @default(true)
   notifDigest    Boolean @default(true)
   notifExpiry    Boolean @default(true)
+  // ---- Materiality thresholds (4) — org-configured, never hard-coded. Stored as text
+  // like every other numeric-looking field in this app; parsed where used. ----
+  materialityDisruptionHours  String?
+  materialityCustomerPct      String?
+  materialityFinancialImpact  String?
 
   @@map("organization")
 }
@@ -184,6 +189,11 @@ model Vendor {
   // ---- Vendor tiering (5A) — tier itself is always derived; only the override is stored. ----
   tierOverride           String?
   tierOverrideReason     String?
+  // ---- Materiality impact inputs (4) — measurable facts, compared against the
+  // organisation's own configured thresholds, never a universal cutoff. ----
+  disruptionToleranceHours String?
+  customersAffectedPct     String?
+  financialImpactEstimate String?
   createdAt           DateTime        @default(now())
   requests            VendorRequest[]
 

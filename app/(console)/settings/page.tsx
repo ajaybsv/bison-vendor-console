@@ -19,6 +19,11 @@ export default async function SettingsPage() {
         notifDigest: org?.notifDigest ?? true,
         notifExpiry: org?.notifExpiry ?? true,
       }}
+      materiality={{
+        materialityDisruptionHours: org?.materialityDisruptionHours ?? "",
+        materialityCustomerPct: org?.materialityCustomerPct ?? "",
+        materialityFinancialImpact: org?.materialityFinancialImpact ?? "",
+      }}
     />
   );
 }

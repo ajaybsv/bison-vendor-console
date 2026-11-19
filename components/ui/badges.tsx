@@ -93,6 +93,16 @@ export function ClassificationChip({ value }: { value: string }) {
   return <Badge tone={CLASSIFICATION_TONE[value] ?? "neutral"}>{value}</Badge>;
 }
 
+const MATERIALITY_TONE: Record<string, Tone> = {
+  "Potential Material": "danger",
+  "Review Required": "warning",
+  "Potential Non-Material": "neutral",
+};
+
+export function MaterialityChip({ value }: { value: string }) {
+  return <Badge tone={MATERIALITY_TONE[value] ?? "neutral"}>{value}</Badge>;
+}
+
 const FRESHNESS: Record<string, [Tone, IconName, string]> = {
   fresh: ["success", "checkCircle", "Fresh"],
   expiring: ["warning", "clock", "Expiring soon"],

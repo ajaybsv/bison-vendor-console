@@ -2,7 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { saveOrgProfile, setNotification, type NotificationKey, type OrgProfile } from "@/actions/settings-actions";
+import {
+  saveMaterialityThresholds,
+  saveOrgProfile,
+  setNotification,
+  type MaterialityThresholds,
+  type NotificationKey,
+  type OrgProfile,
+} from "@/actions/settings-actions";
 import { Checkbox, Select } from "@/components/ui/form";
 import { PageHead } from "@/components/ui/page-head";
 import { useToast } from "@/components/toast/toast-provider";
@@ -14,19 +21,39 @@ const NOTIFICATIONS: [NotificationKey, string][] = [
   ["notifExpiry", "Evidence expiry alerts"],
 ];
 
-export function SettingsForm({ profile, notifications }: { profile: OrgProfile; notifications: Record<NotificationKey, boolean> }) {
+export function SettingsForm({
+  profile,
+  notifications,
+  materiality,
+}: {
+  profile: OrgProfile;
+  notifications: Record<NotificationKey, boolean>;
+  materiality: MaterialityThresholds;
+}) {
   const router = useRouter();
   const { showToast } = useToast();
   const [form, setForm] = useState(profile);
   const [notif, setNotif] = useState(notifications);
+  const [thresholds, setThresholds] = useState(materiality);
   const [pending, startTransition] = useTransition();
+  const [thresholdsPending, startThresholdsTransition] = useTransition();
   const set = (k: keyof OrgProfile) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const setThreshold = (k: keyof MaterialityThresholds) => (v: string) => setThresholds((t) => ({ ...t, [k]: v }));
 
   function save() {
     startTransition(async () => {
       const res = await saveOrgProfile(form);
       if (!res.ok) return showToast(res.error, "danger");
       showToast("Settings saved");
+      router.refresh();
+    });
+  }
+
+  function saveThresholds() {
+    startThresholdsTransition(async () => {
+      const res = await saveMaterialityThresholds(thresholds);
+      if (!res.ok) return showToast(res.error, "danger");
+      showToast("Materiality thresholds saved");
       router.refresh();
     });
   }
@@ -110,6 +137,62 @@ export function SettingsForm({ profile, notifications }: { profile: OrgProfile; 
               Manage security
             </button>
           </div>
+        </div>
+      </div>
+      <div className="sv-card" style={{ marginTop: "var(--sv-space-5)" }}>
+        <div className="sv-card__eyebrow">Materiality thresholds</div>
+        <div className="sv-body-sm" style={{ marginTop: -4 }}>
+          Each vendor&apos;s measurable impact facts are compared against these — not a universal, hard-coded range. Leave a threshold blank to
+          leave that factor out of the materiality check.
+        </div>
+        <div className="grid g2">
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setMatDisruption">
+              Disruption tolerance threshold (hours)
+            </label>
+            <input
+              className="sv-field__input"
+              type="text"
+              id="setMatDisruption"
+              placeholder="e.g. 8"
+              value={thresholds.materialityDisruptionHours}
+              onChange={(e) => setThreshold("materialityDisruptionHours")(e.target.value)}
+            />
+            <div className="sv-field__hint">A vendor whose disruption tolerance is at or below this triggers a materiality factor.</div>
+          </div>
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setMatCustomer">
+              Customer impact threshold (%)
+            </label>
+            <input
+              className="sv-field__input"
+              type="text"
+              id="setMatCustomer"
+              placeholder="e.g. 20"
+              value={thresholds.materialityCustomerPct}
+              onChange={(e) => setThreshold("materialityCustomerPct")(e.target.value)}
+            />
+            <div className="sv-field__hint">A vendor whose affected-customer share meets or exceeds this triggers a materiality factor.</div>
+          </div>
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setMatFinancial">
+              Financial impact threshold (₹)
+            </label>
+            <input
+              className="sv-field__input"
+              type="text"
+              id="setMatFinancial"
+              placeholder="e.g. 10000000"
+              value={thresholds.materialityFinancialImpact}
+              onChange={(e) => setThreshold("materialityFinancialImpact")(e.target.value)}
+            />
+            <div className="sv-field__hint">A vendor whose estimated impact meets or exceeds this triggers a materiality factor.</div>
+          </div>
+        </div>
+        <div className="sv-card__footer" style={{ borderTop: 0, paddingTop: 0, justifyContent: "flex-end" }}>
+          <button className="sv-btn sv-btn--primary" onClick={saveThresholds} disabled={thresholdsPending}>
+            Save thresholds
+          </button>
         </div>
       </div>
     </div>
