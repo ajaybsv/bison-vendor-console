@@ -1,16 +1,19 @@
 import Link from "next/link";
-import { AiAlert, FreshChip, ProgressBar, ReviewBadge, StatusChip } from "@/components/ui/badges";
+import { AiAlert, FreshChip, MaterialityChip, ProgressBar, ReviewBadge, StatusChip, TierChip } from "@/components/ui/badges";
 import { LinkRow } from "@/components/ui/link-row";
+import { findConcentrations } from "@/lib/concentration";
 import { TRUST_PACK_QUESTION_TARGET } from "@/lib/constants";
-import { getOrganization, listClientRequests, listEvidence, listHistory, listTrustAnswers, listVendorRequests, listVendors } from "@/lib/data";
+import { getOrganization, listClientRequests, listEvidence, listHistory, listIssues, listTrustAnswers, listVendorRequests, listVendors } from "@/lib/data";
 import { daysUntil, fmtDate, todayISO } from "@/lib/format";
+import { calculateMateriality } from "@/lib/materiality";
 import { requireUser } from "@/lib/session";
 import { isInFlight, latestRequestFor, reqProgress, reqStatus, reviewState, vendorStatus } from "@/lib/status";
+import { calculateTier } from "@/lib/tiering";
 
 export const metadata = { title: "Dashboard — BISON" };
 
 export default async function DashboardPage() {
-  const [user, org, active, history, answers, evidence, vendors, cycles] = await Promise.all([
+  const [user, org, active, history, answers, evidence, vendors, cycles, issues] = await Promise.all([
     requireUser(),
     getOrganization(),
     listClientRequests(),
@@ -19,6 +22,7 @@ export default async function DashboardPage() {
     listEvidence(),
     listVendors(),
     listVendorRequests(),
+    listIssues(),
   ]);
   const today = todayISO();
   const expiringSoon = evidence.filter((e) => e.freshness === "expiring");
@@ -31,6 +35,21 @@ export default async function DashboardPage() {
   const evPct = evidence.length ? Math.round((evidence.filter((e) => e.freshness === "fresh").length / evidence.length) * 100) : 0;
   const overall = Math.round((answersPct + evPct) / 2);
   const orgName = org?.name ?? "PayBridge Systems";
+
+  const concentrations = findConcentrations(vendors);
+  const orgThresholds = org ?? { materialityDisruptionHours: null, materialityCustomerPct: null, materialityFinancialImpact: null };
+  const vendorRisk = vendors.map((v) => {
+    const hasConcentration = concentrations.some((g) => g.vendors.some((x) => x.id === v.id));
+    return {
+      vendor: v,
+      tier: calculateTier(v, hasConcentration).tier,
+      materiality: calculateMateriality(v, orgThresholds, hasConcentration).outcome,
+    };
+  });
+  const tier1Count = vendorRisk.filter((r) => r.tier === "Tier 1 – Critical").length;
+  const materialCount = vendorRisk.filter((r) => r.materiality === "Potential Material").length;
+  const openIssues = issues.filter((i) => i.status !== "Closed");
+  const pendingApprovals = vendors.filter((v) => v.approvalStatus === "Not started" || v.approvalStatus === "In review").length;
 
   return (
     <div className="sv-page">
@@ -143,7 +162,79 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="between" style={{ margin: "var(--sv-space-6) 0 var(--sv-space-4)" }}>
+      <h2 className="sv-h3" style={{ margin: "var(--sv-space-6) 0 var(--sv-space-4)" }}>
+        Vendor risk overview
+      </h2>
+      <div className="grid g4" style={{ marginBottom: "var(--sv-space-5)" }}>
+        <Link className="sv-card" href="/vendors" style={{ textDecoration: "none", color: "inherit" }}>
+          <div className="sv-card__eyebrow">Tier 1 vendors</div>
+          <div className="sv-stat" style={{ color: tier1Count ? "var(--sv-danger)" : undefined }}>
+            {tier1Count}
+          </div>
+        </Link>
+        <Link className="sv-card" href="/vendors" style={{ textDecoration: "none", color: "inherit" }}>
+          <div className="sv-card__eyebrow">Potential Material</div>
+          <div className="sv-stat" style={{ color: materialCount ? "var(--sv-danger)" : undefined }}>
+            {materialCount}
+          </div>
+        </Link>
+        <Link className="sv-card" href="/vendors" style={{ textDecoration: "none", color: "inherit" }}>
+          <div className="sv-card__eyebrow">Concentration flags</div>
+          <div className="sv-stat" style={{ color: concentrations.length ? "var(--sv-warning)" : undefined }}>
+            {concentrations.length}
+          </div>
+        </Link>
+        <Link className="sv-card" href="/issues" style={{ textDecoration: "none", color: "inherit" }}>
+          <div className="sv-card__eyebrow">Open issues</div>
+          <div className="sv-stat" style={{ color: openIssues.length ? "var(--sv-warning)" : undefined }}>
+            {openIssues.length}
+          </div>
+        </Link>
+      </div>
+      {(tier1Count > 0 || materialCount > 0) && (
+        <div className="sv-table__scroll" style={{ marginBottom: "var(--sv-space-5)" }}>
+          <table className="sv-table">
+            <caption>Vendors needing the closest attention</caption>
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Tier</th>
+                <th>Materiality</th>
+                <th>Approval status</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {vendorRisk
+                .filter((r) => r.tier === "Tier 1 – Critical" || r.materiality === "Potential Material")
+                .map((r) => (
+                  <LinkRow key={r.vendor.id} href={`/vendors/${r.vendor.id}`}>
+                    <td style={{ fontWeight: 600 }}>{r.vendor.name}</td>
+                    <td>
+                      <TierChip value={r.tier} />
+                    </td>
+                    <td>
+                      <MaterialityChip value={r.materiality} />
+                    </td>
+                    <td>
+                      <StatusChip value={r.vendor.approvalStatus} />
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      <button className="sv-btn sv-btn--tertiary sv-btn--sm">View</button>
+                    </td>
+                  </LinkRow>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {pendingApprovals > 0 && (
+        <p className="sv-body-sm" style={{ marginTop: "calc(-1 * var(--sv-space-3))", marginBottom: "var(--sv-space-5)" }}>
+          <Link href="/vendors">{pendingApprovals} vendor{pendingApprovals === 1 ? "" : "s"} still awaiting an approval decision.</Link>
+        </p>
+      )}
+
+      <div className="between" style={{ margin: "0 0 var(--sv-space-4)" }}>
         <h2 className="sv-h3" style={{ margin: 0 }}>
           Sent requests
         </h2>
