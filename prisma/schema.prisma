@@ -197,6 +197,9 @@ model Vendor {
   // ---- Approval workflow (6) — who must review is always derived; only the overall
   // decision status is tracked here. ----
   approvalStatus      String          @default("Not started")
+  // ---- Cross-functional confirmation (7) — traceability that each team's own
+  // assessment ran; never duplicates their actual due-diligence. ----
+  crossFunctionalConfirmations String[]        @default([])
   createdAt           DateTime        @default(now())
   requests            VendorRequest[]
 

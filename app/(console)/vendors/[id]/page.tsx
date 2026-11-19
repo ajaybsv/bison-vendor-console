@@ -8,6 +8,7 @@ import { VendorProfileActions } from "@/components/vendors/vendor-profile-action
 import { requiredApprovers } from "@/lib/approval";
 import { classify } from "@/lib/classification";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
+import { CONFIRMATION_AREAS } from "@/lib/constants";
 import { getOrganization, getVendor, listIssues, listTeam, listVendorRequests, listVendors } from "@/lib/data";
 import { fmtDate, todayISO } from "@/lib/format";
 import { calculateMateriality } from "@/lib/materiality";
@@ -179,6 +180,17 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
           <div className="sv-card__eyebrow">Approval workflow</div>
           <Fact label="Approval status">
             <StatusChip value={v.approvalStatus} />
+          </Fact>
+          <Fact label="Internal confirmations received">
+            <div>
+              <Chips items={v.crossFunctionalConfirmations} />
+              {v.crossFunctionalConfirmations.length === 0 && <span className="sv-body-sm">None yet</span>}
+            </div>
+            {CONFIRMATION_AREAS.some((a) => !v.crossFunctionalConfirmations.includes(a)) && (
+              <div className="sv-caption" style={{ marginTop: 4 }}>
+                Still pending: {CONFIRMATION_AREAS.filter((a) => !v.crossFunctionalConfirmations.includes(a)).join(", ")}
+              </div>
+            )}
           </Fact>
           <Fact label={`Required reviewers (${approvers.length})`}>
             <div className="stack" style={{ gap: "var(--sv-space-2)", marginTop: 4 }}>

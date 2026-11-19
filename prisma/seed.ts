@@ -121,7 +121,7 @@ async function main() {
       internalDependencies: "Loan origination platform, mobile app backend, payment gateway API",
       alternativeProviders: "Limited", dependencyReviewStatus: "Reviewed",
       disruptionToleranceHours: "4", customersAffectedPct: "60", financialImpactEstimate: "15000000",
-      approvalStatus: "In review",
+      approvalStatus: "In review", crossFunctionalConfirmations: ["Finance / ERM", "Information Security"],
     },
   });
   // Shares both a cloud provider (AWS) and a subcontractor (Equinix) with Nimbus — the concentration demo.

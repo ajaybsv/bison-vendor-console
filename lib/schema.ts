@@ -1,4 +1,4 @@
-import { CONTROLS, EVI_TYPES, FRAMEWORKS, ROLES, type Area } from "@/lib/constants";
+import { CONFIRMATION_AREAS, CONTROLS, EVI_TYPES, FRAMEWORKS, ROLES, type Area } from "@/lib/constants";
 import { TIERS } from "@/lib/tiering";
 
 export type EntityKey = "answers" | "evidence" | "team" | "vendors" | "issues";
@@ -221,6 +221,13 @@ export const SCHEMA: Record<EntityKey, EntitySchema> = {
         editOnly: true,
         def: "Not started",
         help: "Required reviewers are calculated from the vendor's own risk profile — shown on the profile.",
+      },
+      {
+        k: "crossFunctionalConfirmations",
+        l: "Internal confirmations received",
+        t: "checklist",
+        opts: CONFIRMATION_AREAS,
+        help: "Confirms each team's own assessment (where it applies) is done — this doesn't duplicate their actual due-diligence.",
       },
       { k: "contractStart", l: "Contract start", t: "date" },
       {

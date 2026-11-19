@@ -13,6 +13,10 @@ export const EVI_TYPES = [
 
 export const FRAMEWORKS = ["RBI", "ISO 27001", "DPDP", "SEBI CSCRF"];
 
+/** Internal teams whose own assessment (owned outside TPRM/IT) needs to be confirmed
+ * complete before approval — a status/traceability record, not a duplicate of their work. */
+export const CONFIRMATION_AREAS = ["Finance / ERM", "Technology", "Information Security", "Legal / Compliance", "Business"];
+
 export const VENDOR_TYPES = ["Payment Gateway", "Cloud", "SaaS", "Data centre"];
 
 export const ROLES = ["Owner", "Contributor", "Viewer"] as const;
