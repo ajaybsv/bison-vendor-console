@@ -10,7 +10,7 @@ import { classify } from "@/lib/classification";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
 import { CONFIRMATION_AREAS } from "@/lib/constants";
 import { getOrganization, getVendor, listIssues, listTeam, listVendorRequests, listVendors } from "@/lib/data";
-import { fmtDate, todayISO } from "@/lib/format";
+import { fmtDate, fmtInr, todayISO } from "@/lib/format";
 import { calculateMateriality } from "@/lib/materiality";
 import { questionCountsByControl } from "@/lib/questions";
 import { requestsFor, reviewState, vendorStatus } from "@/lib/status";
@@ -170,6 +170,9 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
                 {concentrations.map((g) => (
                   <div key={`${g.kind}:${g.value}`}>
                     {g.label} <b>&ldquo;{g.value}&rdquo;</b>: {g.peers.map((p) => p.name).join(", ")}
+                    {g.aggregateSpend != null && (
+                      <span className="sv-caption"> · Aggregate exposure: {fmtInr(g.aggregateSpend)} across {g.vendors.length} vendors</span>
+                    )}
                   </div>
                 ))}
               </div>

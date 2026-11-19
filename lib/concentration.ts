@@ -13,6 +13,9 @@ export type ConcentrationGroup = {
   label: string;
   value: string;
   vendors: VendorRef[];
+  /** Total annual spend across the vendors in this group, where at least one has
+   * recorded a figure — the "aggregate provider exposure" materiality factor. */
+  aggregateSpend?: number;
 };
 
 const KIND_LABEL: Record<ConcentrationKind, string> = {
@@ -31,18 +34,25 @@ function splitList(value: string | null): string[] {
 }
 
 function groupVendorsBy(vendors: Vendor[], kind: ConcentrationKind, valuesFor: (v: Vendor) => string[]): ConcentrationGroup[] {
-  const byKey = new Map<string, { display: string; vendors: VendorRef[] }>();
+  const byKey = new Map<string, { display: string; vendors: VendorRef[]; spend: number; hasSpend: boolean }>();
   for (const v of vendors) {
     for (const raw of valuesFor(v)) {
       const key = raw.toLowerCase();
-      const entry = byKey.get(key) ?? { display: raw, vendors: [] };
-      if (!entry.vendors.some((x) => x.id === v.id)) entry.vendors.push({ id: v.id, name: v.name });
+      const entry = byKey.get(key) ?? { display: raw, vendors: [], spend: 0, hasSpend: false };
+      if (!entry.vendors.some((x) => x.id === v.id)) {
+        entry.vendors.push({ id: v.id, name: v.name });
+        const spend = v.annualSpend ? Number(v.annualSpend) : null;
+        if (spend != null && Number.isFinite(spend)) {
+          entry.spend += spend;
+          entry.hasSpend = true;
+        }
+      }
       byKey.set(key, entry);
     }
   }
   return [...byKey.values()]
     .filter((e) => e.vendors.length > 1)
-    .map((e) => ({ kind, label: KIND_LABEL[kind], value: e.display, vendors: e.vendors }));
+    .map((e) => ({ kind, label: KIND_LABEL[kind], value: e.display, vendors: e.vendors, aggregateSpend: e.hasSpend ? e.spend : undefined }));
 }
 
 /** Every cross-vendor concentration finding — two or more vendors sharing a provider dependency. */

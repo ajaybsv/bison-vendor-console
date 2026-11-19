@@ -199,6 +199,13 @@ export const SCHEMA: Record<EntityKey, EntitySchema> = {
         help: "Supports dependency risk — limited or no alternatives increase exposure.",
       },
       {
+        k: "annualSpend",
+        l: "Annual spend with this vendor (₹)",
+        t: "text",
+        ph: "e.g. 8000000",
+        help: "Summed automatically across vendors that share a legal entity, group, subcontractor or cloud provider.",
+      },
+      {
         k: "dependencyReviewStatus",
         l: "Dependency info review status",
         t: "select",

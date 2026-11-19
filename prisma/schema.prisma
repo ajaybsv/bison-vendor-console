@@ -191,6 +191,9 @@ model Vendor {
   internalDependencies   String?
   alternativeProviders   String?
   dependencyReviewStatus String          @default("Pending")
+  // Annual spend with this vendor — feeds the "aggregate provider exposure"
+  // concentration/materiality factor when vendors share a dependency.
+  annualSpend            String?
   // ---- Vendor tiering (5A) — tier itself is always derived; only the override is stored. ----
   tierOverride           String?
   tierOverrideReason     String?

@@ -123,6 +123,7 @@ async function main() {
       disruptionToleranceHours: "4", customersAffectedPct: "60", financialImpactEstimate: "15000000",
       approvalStatus: "In review", crossFunctionalConfirmations: ["Finance / ERM", "Information Security"],
       approverSignoffs: ["Business / Relationship Owner", "CISO / Security Head"],
+      annualSpend: "12000000",
     },
   });
   // Shares both a cloud provider (AWS) and a subcontractor (Equinix) with Nimbus — the concentration demo.
@@ -136,6 +137,7 @@ async function main() {
       legalEntity: "VerifyChain Technologies Pvt Ltd", parentGroup: "IDVerify Global Holdings", cloudProviders: "AWS", subcontractors: "Onfido, Equinix Data Centers",
       internalDependencies: "Customer onboarding flow",
       alternativeProviders: "Available", dependencyReviewStatus: "Reviewed",
+      annualSpend: "4500000",
     },
   });
   // Swift Support BPO has no requests — the roster derives "Not sent" from that absence.

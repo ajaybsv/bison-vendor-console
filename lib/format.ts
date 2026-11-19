@@ -26,6 +26,10 @@ export function daysUntil(dateStr: string | null | undefined, today: string): nu
   return Math.round((b - a) / 86400000);
 }
 
+export function fmtInr(n: number): string {
+  return `₹${n.toLocaleString("en-IN")}`;
+}
+
 export function initials(name: string): string {
   return name
     .split(/\s+/)

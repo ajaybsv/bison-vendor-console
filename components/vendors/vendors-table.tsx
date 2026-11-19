@@ -14,7 +14,7 @@ import { SendRequestDrawer, type SendTarget } from "@/components/vendors/send-re
 import { useToast } from "@/components/toast/toast-provider";
 import { classify } from "@/lib/classification";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, fmtInr } from "@/lib/format";
 import { calculateMateriality } from "@/lib/materiality";
 import { SCHEMA } from "@/lib/schema";
 import { isInFlight, latestRequestFor, reviewState, vendorStatus } from "@/lib/status";
@@ -84,6 +84,9 @@ export function VendorsTable({
             {concentrations.map((g) => (
               <div key={`${g.kind}:${g.value}`}>
                 {g.label} <b>&ldquo;{g.value}&rdquo;</b>: {g.vendors.map((v) => v.name).join(", ")}
+                {g.aggregateSpend != null && (
+                  <span className="sv-caption"> · Aggregate exposure: {fmtInr(g.aggregateSpend)} across {g.vendors.length} vendors</span>
+                )}
               </div>
             ))}
           </div>
