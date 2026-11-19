@@ -36,6 +36,7 @@ const NAV: { grp: string; items: NavItem[] }[] = [
     grp: "Organization",
     items: [
       { href: "/team", label: "Team & access", icon: "users", count: "team" },
+      { href: "/reports", label: "Reports", icon: "barChart" },
       { href: "/settings", label: "Settings", icon: "sliders" },
     ],
   },

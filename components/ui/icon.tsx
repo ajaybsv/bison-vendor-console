@@ -22,6 +22,7 @@ const ICONS = {
   chevronLeft: `<polyline points="15 6 9 12 15 18"/>`,
   building: `<rect x="4" y="3" width="16" height="18" rx="1"/><line x1="9" y1="7.5" x2="9" y2="7.51"/><line x1="15" y1="7.5" x2="15" y2="7.51"/><line x1="9" y1="11.5" x2="9" y2="11.51"/><line x1="15" y1="11.5" x2="15" y2="11.51"/><line x1="9" y1="15.5" x2="9" y2="15.51"/><line x1="15" y1="15.5" x2="15" y2="15.51"/>`,
   send: `<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>`,
+  barChart: `<line x1="4" y1="20" x2="20" y2="20"/><rect x="5" y="14" width="3" height="6" rx="0.5"/><rect x="10.5" y="9" width="3" height="11" rx="0.5"/><rect x="16" y="11" width="3" height="9" rx="0.5"/>`,
 } as const;
 
 export type IconName = keyof typeof ICONS;

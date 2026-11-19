@@ -25,7 +25,7 @@ async function main() {
   // Fixed ids are referenced across tables (sourceAnswerId, vendorId), so restart sequences too.
   await prisma.$executeRawUnsafe(
     `TRUNCATE organization, team_members, sessions, client_requests, workspace_answers, history, trust_answers,
-     evidence_items, questions, vendors, vendor_requests, vendor_responses, vendor_request_evidence, issues
+     evidence_items, questions, vendors, vendor_requests, vendor_responses, vendor_request_evidence, issues, activity_log
      RESTART IDENTITY CASCADE`
   );
 

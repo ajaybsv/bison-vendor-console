@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { logActivity } from "@/lib/activity";
 import { VENDOR_TYPES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { authorize, type ActionResult } from "@/lib/session";
@@ -41,6 +42,7 @@ export async function saveOrgProfile(profile: OrgProfile): Promise<ActionResult>
   };
   if (id) await prisma.organization.update({ where: { id }, data });
   else await prisma.organization.create({ data });
+  await logActivity("settings", "updated", "Organization profile", auth.name);
   revalidatePath("/", "layout");
   return { ok: true };
 }
@@ -81,6 +83,7 @@ export async function saveMaterialityThresholds(thresholds: MaterialityThreshold
   const id = await orgId();
   if (!id) return { ok: false, error: "Save the organization profile first" };
   await prisma.organization.update({ where: { id }, data });
+  await logActivity("settings", "updated", "Materiality thresholds", auth.name);
   revalidatePath("/", "layout");
   return { ok: true };
 }

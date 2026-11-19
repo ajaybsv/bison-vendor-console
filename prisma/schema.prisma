@@ -284,3 +284,18 @@ model Issue {
 
   @@map("issues")
 }
+
+// ---------- Activity log (12) — written alongside every save/delete; shared across entities,
+// matching the admin console's convention. ----------
+
+model ActivityLog {
+  id     Int      @id @default(autoincrement())
+  entity String
+  ts     DateTime @default(now())
+  action String
+  label  String
+  user   String
+
+  @@index([entity, ts])
+  @@map("activity_log")
+}

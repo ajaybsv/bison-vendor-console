@@ -3,9 +3,15 @@
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@/generated/prisma/client";
+import { logActivity } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
 import { SCHEMA, type EntityKey, type FormValues } from "@/lib/schema";
 import { authorize, type ActionResult } from "@/lib/session";
+
+/** The most human-readable field a record has, for the activity log. */
+function labelFor(data: Record<string, unknown>): string {
+  return (data.name as string) || (data.title as string) || (data.q as string) || "this record";
+}
 
 /** Keep only the schema's own (storable) fields; blank optional values become null. */
 function pickFields(entity: EntityKey, values: FormValues, editing: boolean): Record<string, string | string[] | null> {
@@ -34,6 +40,7 @@ function delegate(entity: EntityKey) {
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
     update(args: { where: { id: number }; data: Record<string, unknown> }): Promise<unknown>;
     delete(args: { where: { id: number } }): Promise<unknown>;
+    findUnique(args: { where: { id: number } }): Promise<Record<string, unknown> | null>;
   };
 }
 
@@ -66,6 +73,7 @@ export async function saveRecord(entity: EntityKey, editingId: number | null, va
     throw e;
   }
 
+  await logActivity(entity, editingId ? "updated" : "created", labelFor(data), auth.name);
   revalidatePath("/", "layout");
   return { ok: true };
 }
@@ -74,7 +82,9 @@ export async function deleteRecord(entity: EntityKey, id: number): Promise<Actio
   const auth = await authorize(SCHEMA[entity].area);
   if ("ok" in auth) return auth;
   if (entity === "team" && id === auth.id) return { ok: false, error: "You can't remove yourself" };
+  const row = await delegate(entity).findUnique({ where: { id } });
   await delegate(entity).delete({ where: { id } });
+  await logActivity(entity, "deleted", row ? labelFor(row) : "this record", auth.name);
   revalidatePath("/", "layout");
   return { ok: true };
 }

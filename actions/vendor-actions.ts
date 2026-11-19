@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { logActivity } from "@/lib/activity";
 import { CONTROLS, EVI_TYPES } from "@/lib/constants";
 import { todayISO } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -43,6 +44,7 @@ export async function sendVendorRequest(
       evidence: { create: evidenceRequested.map((type) => ({ type })) },
     },
   });
+  await logActivity("vendors", "sent request", vendor.name, auth.name);
   revalidatePath("/", "layout");
   return { ok: true };
 }
