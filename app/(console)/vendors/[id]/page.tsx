@@ -175,6 +175,29 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
               </div>
             </WarningAlert>
           )}
+          <div className="sv-card__eyebrow" style={{ marginTop: "var(--sv-space-3)" }}>
+            Exit management
+          </div>
+          <div className="grid g2">
+            <Fact label="Exit plan status">
+              <StatusChip value={v.exitPlanStatus} />
+            </Fact>
+            {v.exitPlanStatus !== "Not Required" && (
+              <>
+                <Fact label="Transition date">
+                  <div className="sv-body-sm">{fmtDate(v.exitTransitionDate)}</div>
+                </Fact>
+                <Fact label="Data return / deletion">
+                  {v.dataReturnStatus ? <StatusChip value={v.dataReturnStatus} /> : <span className="sv-body-sm">—</span>}
+                </Fact>
+              </>
+            )}
+          </div>
+          {v.exitClosureEvidence && (
+            <Fact label="Exit closure evidence">
+              <div className="sv-body-sm">{v.exitClosureEvidence}</div>
+            </Fact>
+          )}
         </div>
         <div className="col sv-card" style={{ flex: 1, minWidth: 340 }}>
           <div className="sv-card__eyebrow">Approval workflow</div>

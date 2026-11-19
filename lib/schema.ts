@@ -229,6 +229,23 @@ export const SCHEMA: Record<EntityKey, EntitySchema> = {
         opts: CONFIRMATION_AREAS,
         help: "Confirms each team's own assessment (where it applies) is done — this doesn't duplicate their actual due-diligence.",
       },
+      {
+        k: "exitPlanStatus",
+        l: "Exit plan status",
+        t: "select",
+        opts: ["Not Required", "Planned", "In progress", "Completed"],
+        editOnly: true,
+        def: "Not Required",
+        help: "Track this once a vendor is being transitioned away from — most vendors stay \"Not Required\".",
+      },
+      { k: "exitTransitionDate", l: "Exit transition target / completed date", t: "date" },
+      {
+        k: "dataReturnStatus",
+        l: "Data return / deletion status",
+        t: "select",
+        opts: ["Pending", "Confirmed", "Not Applicable"],
+      },
+      { k: "exitClosureEvidence", l: "Exit closure evidence", t: "textarea", ph: "Data destruction certificate, transition sign-off, etc." },
       { k: "contractStart", l: "Contract start", t: "date" },
       {
         k: "cadence",

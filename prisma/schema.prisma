@@ -200,6 +200,11 @@ model Vendor {
   // ---- Cross-functional confirmation (7) — traceability that each team's own
   // assessment ran; never duplicates their actual due-diligence. ----
   crossFunctionalConfirmations String[]        @default([])
+  // ---- Exit management (11) — tracked once onboarded; most vendors never need it. ----
+  exitPlanStatus       String          @default("Not Required")
+  exitTransitionDate   String?
+  dataReturnStatus     String?
+  exitClosureEvidence  String?
   createdAt           DateTime        @default(now())
   requests            VendorRequest[]
 
