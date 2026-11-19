@@ -63,6 +63,13 @@ export async function saveRecord(entity: EntityKey, editingId: number | null, va
     if (!editingId) data.inviteToken = randomBytes(24).toString("hex");
   }
 
+  // Each approver sign-off change gets its own activity-log line, by role — the actual
+  // audit trail for who approved what and when, rather than a generic "vendor updated".
+  const priorSignoffs =
+    entity === "vendors" && editingId
+      ? ((await delegate(entity).findUnique({ where: { id: editingId } }))?.approverSignoffs as string[] | undefined) ?? []
+      : [];
+
   try {
     if (editingId) await delegate(entity).update({ where: { id: editingId }, data });
     else await delegate(entity).create({ data });
@@ -71,6 +78,16 @@ export async function saveRecord(entity: EntityKey, editingId: number | null, va
       return { ok: false, error: "Someone with that email is already on the team" };
     }
     throw e;
+  }
+
+  if (entity === "vendors") {
+    const newSignoffs = (data.approverSignoffs as string[] | undefined) ?? [];
+    for (const role of newSignoffs.filter((r) => !priorSignoffs.includes(r))) {
+      await logActivity("vendors", `approved as ${role}`, labelFor(data), auth.name);
+    }
+    for (const role of priorSignoffs.filter((r) => !newSignoffs.includes(r))) {
+      await logActivity("vendors", `revoked sign-off as ${role}`, labelFor(data), auth.name);
+    }
   }
 
   await logActivity(entity, editingId ? "updated" : "created", labelFor(data), auth.name);

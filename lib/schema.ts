@@ -1,3 +1,4 @@
+import { ALL_APPROVER_ROLES } from "@/lib/approval";
 import { CONFIRMATION_AREAS, CONTROLS, EVI_TYPES, FRAMEWORKS, ROLES, type Area } from "@/lib/constants";
 import { TIERS } from "@/lib/tiering";
 
@@ -221,6 +222,13 @@ export const SCHEMA: Record<EntityKey, EntitySchema> = {
         editOnly: true,
         def: "Not started",
         help: "Required reviewers are calculated from the vendor's own risk profile — shown on the profile.",
+      },
+      {
+        k: "approverSignoffs",
+        l: "Approver sign-offs recorded",
+        t: "checklist",
+        opts: ALL_APPROVER_ROLES,
+        help: "Only check a role once that person has actually reviewed and approved — each change is written to the activity log.",
       },
       {
         k: "crossFunctionalConfirmations",

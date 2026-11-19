@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Chips, ClassificationChip, CriticalityChip, MaterialityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
+import { Badge, Chips, ClassificationChip, CriticalityChip, MaterialityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
 import { Icon } from "@/components/ui/icon";
 import { LinkRow } from "@/components/ui/link-row";
 import { PageHead } from "@/components/ui/page-head";
@@ -215,16 +215,24 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
               </div>
             )}
           </Fact>
-          <Fact label={`Required reviewers (${approvers.length})`}>
+          <Fact label={`Required reviewers (${approvers.filter((a) => v.approverSignoffs.includes(a.role)).length}/${approvers.length} signed off)`}>
             <div className="stack" style={{ gap: "var(--sv-space-2)", marginTop: 4 }}>
-              {approvers.map((a) => (
-                <div key={a.role}>
-                  <div style={{ fontWeight: 600 }} className="sv-body-sm">
-                    {a.role}
+              {approvers.map((a) => {
+                const signedOff = v.approverSignoffs.includes(a.role);
+                return (
+                  <div key={a.role} className="between" style={{ alignItems: "flex-start" }}>
+                    <div>
+                      <div style={{ fontWeight: 600 }} className="sv-body-sm">
+                        {a.role}
+                      </div>
+                      <div className="sv-caption">{a.reason}</div>
+                    </div>
+                    <Badge tone={signedOff ? "success" : "neutral"} icon={signedOff ? "checkCircle" : "clock"}>
+                      {signedOff ? "Signed off" : "Pending"}
+                    </Badge>
                   </div>
-                  <div className="sv-caption">{a.reason}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Fact>
         </div>

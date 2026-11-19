@@ -202,6 +202,9 @@ model Vendor {
   // ---- Approval workflow (6) — who must review is always derived; only the overall
   // decision status is tracked here. ----
   approvalStatus      String          @default("Not started")
+  // Which required-approver roles have signed off. Each change is logged to the
+  // activity log by role (gap 6/7) — the sign-off trail itself lives there, not here.
+  approverSignoffs    String[]        @default([])
   // ---- Cross-functional confirmation (7) — traceability that each team's own
   // assessment ran; never duplicates their actual due-diligence. ----
   crossFunctionalConfirmations String[]        @default([])
