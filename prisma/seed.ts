@@ -114,8 +114,12 @@ async function main() {
       contactName: "Arjun Mehra", contact: "security@nimbuscloud.io", contactPhone: "+1 415 555 0148",
       owner: "Sneha Iyer", criticality: "Critical", dataSensitivity: "Payment card data (PCI)", frameworks: ["RBI", "ISO 27001"], country: "United States",
       contractStart: "2024-03-01", cadence: "Annually (12 months)", nextReview: "2027-03-01",
+      legalEntity: "Nimbus Cloud Infrastructure Inc.", cloudProviders: "AWS, Cloudflare", subcontractors: "Equinix Data Centers",
+      internalDependencies: "Loan origination platform, mobile app backend, payment gateway API",
+      alternativeProviders: "Limited", dependencyReviewStatus: "Reviewed",
     },
   });
+  // Shares both a cloud provider (AWS) and a subcontractor (Equinix) with Nimbus — the concentration demo.
   const verify = await prisma.vendor.create({
     data: {
       name: "VerifyChain KYC Services", type: "Identity verification (KYC)",
@@ -123,6 +127,9 @@ async function main() {
       contactName: "Priya Raman", contact: "compliance@verifychain.com", contactPhone: "+91 98450 22110",
       owner: "Rahul Mehta", criticality: "Critical", dataSensitivity: "Customer PII", frameworks: ["RBI", "DPDP"], country: "India",
       contractStart: "2023-11-01", cadence: "Every 6 months", nextReview: "2026-10-20",
+      legalEntity: "VerifyChain Technologies Pvt Ltd", parentGroup: "IDVerify Global Holdings", cloudProviders: "AWS", subcontractors: "Onfido, Equinix Data Centers",
+      internalDependencies: "Customer onboarding flow",
+      alternativeProviders: "Available", dependencyReviewStatus: "Reviewed",
     },
   });
   // Swift Support BPO has no requests — the roster derives "Not sent" from that absence.
@@ -133,6 +140,9 @@ async function main() {
       contactName: "Meera Nair", contact: "ops@swiftsupportbpo.com", contactPhone: "+91 80 4567 8901",
       owner: "Vikram Shah", criticality: "Medium", dataSensitivity: "Customer PII", frameworks: ["DPDP"], country: "India",
       contractStart: "2025-05-01", cadence: "Annually (12 months)", nextReview: "2026-10-05",
+      legalEntity: "Swift Support BPO Pvt Ltd", cloudProviders: "Microsoft Azure",
+      internalDependencies: "Customer support portal",
+      alternativeProviders: "Available", dependencyReviewStatus: "Pending",
     },
   });
 

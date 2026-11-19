@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Chips, CriticalityChip, ReviewBadge, StatusChip } from "@/components/ui/badges";
+import { Chips, CriticalityChip, ReviewBadge, StatusChip, WarningAlert } from "@/components/ui/badges";
 import { Icon } from "@/components/ui/icon";
 import { LinkRow } from "@/components/ui/link-row";
 import { PageHead } from "@/components/ui/page-head";
 import { VendorProfileActions } from "@/components/vendors/vendor-profile-actions";
-import { getVendor, listTeam, listVendorRequests } from "@/lib/data";
+import { concentrationsFor, findConcentrations } from "@/lib/concentration";
+import { getVendor, listTeam, listVendorRequests, listVendors } from "@/lib/data";
 import { fmtDate, todayISO } from "@/lib/format";
 import { questionCountsByControl } from "@/lib/questions";
 import { requestsFor, reviewState, vendorStatus } from "@/lib/status";
@@ -27,10 +28,16 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
   const { id } = await params;
   const v = await getVendor(Number(id));
   if (!v) notFound();
-  const [cycles, team, questionCounts] = await Promise.all([listVendorRequests(), listTeam(), questionCountsByControl()]);
+  const [cycles, team, questionCounts, allVendors] = await Promise.all([
+    listVendorRequests(),
+    listTeam(),
+    questionCountsByControl(),
+    listVendors(),
+  ]);
   const today = todayISO();
   const reqs = requestsFor(cycles, v.id);
   const latest = reqs[0] ?? null;
+  const concentrations = concentrationsFor(v.id, findConcentrations(allVendors));
 
   return (
     <div className="sv-page">
@@ -81,6 +88,51 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
             questionCounts={questionCounts}
             today={today}
           />
+        </div>
+        <div className="col sv-card" style={{ flex: 1, minWidth: 340 }}>
+          <div className="sv-card__eyebrow">Dependency & concentration</div>
+          <div className="grid g2">
+            <Fact label="Legal entity">
+              <div className="sv-body-sm">{v.legalEntity || "—"}</div>
+            </Fact>
+            <Fact label="Parent / group company">
+              <div className="sv-body-sm">{v.parentGroup || "—"}</div>
+            </Fact>
+            <Fact label="Key subcontractors">
+              <div>
+                <Chips items={v.subcontractors ? v.subcontractors.split(",").map((s) => s.trim()).filter(Boolean) : []} />
+                {!v.subcontractors && <span className="sv-body-sm">—</span>}
+              </div>
+            </Fact>
+            <Fact label="Cloud / tech providers">
+              <div>
+                <Chips items={v.cloudProviders ? v.cloudProviders.split(",").map((s) => s.trim()).filter(Boolean) : []} />
+                {!v.cloudProviders && <span className="sv-body-sm">—</span>}
+              </div>
+            </Fact>
+            <Fact label="Alternative providers">
+              <div className="sv-body-sm">{v.alternativeProviders || "—"}</div>
+            </Fact>
+            <Fact label="Dependency review status">
+              <StatusChip value={v.dependencyReviewStatus} />
+            </Fact>
+          </div>
+          {v.internalDependencies && (
+            <Fact label="Internal services affected if this vendor fails">
+              <div className="sv-body-sm">{v.internalDependencies}</div>
+            </Fact>
+          )}
+          {concentrations.length > 0 && (
+            <WarningAlert title="Shared with other vendors">
+              <div className="stack" style={{ gap: "var(--sv-space-1)" }}>
+                {concentrations.map((g) => (
+                  <div key={`${g.kind}:${g.value}`}>
+                    {g.label} <b>&ldquo;{g.value}&rdquo;</b>: {g.peers.map((p) => p.name).join(", ")}
+                  </div>
+                ))}
+              </div>
+            </WarningAlert>
+          )}
         </div>
       </div>
       <h2 className="sv-h3" style={{ marginBottom: "var(--sv-space-3)" }}>

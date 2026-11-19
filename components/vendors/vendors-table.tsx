@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteRecord } from "@/actions/entity-actions";
 import { EntityFormDrawer } from "@/components/entity/entity-form-drawer";
-import { CriticalityChip, ReviewBadge, StatusChip } from "@/components/ui/badges";
+import { CriticalityChip, ReviewBadge, StatusChip, WarningAlert } from "@/components/ui/badges";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SearchInput } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
 import { PageHead } from "@/components/ui/page-head";
 import { SendRequestDrawer, type SendTarget } from "@/components/vendors/send-request-drawer";
 import { useToast } from "@/components/toast/toast-provider";
+import { findConcentrations } from "@/lib/concentration";
 import { fmtDate } from "@/lib/format";
 import { SCHEMA } from "@/lib/schema";
 import { isInFlight, latestRequestFor, reviewState, vendorStatus } from "@/lib/status";
@@ -50,6 +51,7 @@ export function VendorsTable({
 
   const q = query.toLowerCase();
   const rows = vendors.filter((v) => !q || Object.values(v).join(" ").toLowerCase().includes(q));
+  const concentrations = findConcentrations(vendors);
 
   function closeSend() {
     setSendTarget(null);
@@ -70,6 +72,17 @@ export function VendorsTable({
   return (
     <div className="sv-page">
       <PageHead title="Vendors" intro={SCHEMA.vendors.intro} />
+      {concentrations.length > 0 && (
+        <WarningAlert title={`${concentrations.length} concentration / dependency flag${concentrations.length > 1 ? "s" : ""} across your vendors`}>
+          <div className="stack" style={{ gap: "var(--sv-space-1)" }}>
+            {concentrations.map((g) => (
+              <div key={`${g.kind}:${g.value}`}>
+                {g.label} <b>&ldquo;{g.value}&rdquo;</b>: {g.vendors.map((v) => v.name).join(", ")}
+              </div>
+            ))}
+          </div>
+        </WarningAlert>
+      )}
       <div className="toolbar">
         <SearchInput value={query} placeholder="Search vendors" onChange={setQuery} />
         <div style={{ flex: 1 }} />

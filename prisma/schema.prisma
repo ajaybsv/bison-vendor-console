@@ -173,6 +173,14 @@ model Vendor {
   contractStart       String?
   cadence             String
   nextReview          String?
+  // ---- Concentration & dependency (8B) ----
+  legalEntity            String?
+  parentGroup            String?
+  subcontractors         String?
+  cloudProviders         String?
+  internalDependencies   String?
+  alternativeProviders   String?
+  dependencyReviewStatus String          @default("Pending")
   createdAt           DateTime        @default(now())
   requests            VendorRequest[]
 

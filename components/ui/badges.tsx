@@ -41,6 +41,9 @@ const STATUS: Record<string, [Tone, IconName | null]> = {
   "Not sent": ["neutral", "pencil"],
   "Awaiting response": ["brand", "clock"],
   Completed: ["success", "checkCircle"],
+  Pending: ["neutral", "clock"],
+  Reviewed: ["success", "checkCircle"],
+  "Concern raised": ["danger", "alertTriangle"],
 };
 
 export function StatusChip({ value }: { value: string }) {
@@ -139,6 +142,18 @@ export function InfoAlert({ children, compact }: { children: React.ReactNode; co
       <Icon name="info" size={compact ? 16 : 18} />
       <div className="sv-alert__body" style={{ marginTop: 0 }}>
         {children}
+      </div>
+    </div>
+  );
+}
+
+export function WarningAlert({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="sv-alert sv-alert--warning">
+      <Icon name="alertTriangle" size={18} />
+      <div>
+        <div className="sv-alert__title">{title}</div>
+        <div className="sv-alert__body">{children}</div>
       </div>
     </div>
   );
