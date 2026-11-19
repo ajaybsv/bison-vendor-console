@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Chips, CriticalityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
+import { Chips, ClassificationChip, CriticalityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
 import { Icon } from "@/components/ui/icon";
 import { LinkRow } from "@/components/ui/link-row";
 import { PageHead } from "@/components/ui/page-head";
 import { VendorProfileActions } from "@/components/vendors/vendor-profile-actions";
+import { classify } from "@/lib/classification";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
 import { getVendor, listIssues, listTeam, listVendorRequests, listVendors } from "@/lib/data";
 import { fmtDate, todayISO } from "@/lib/format";
@@ -42,6 +43,7 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
   const issues = allIssues.filter((i) => i.vendor === v.name);
   const concentrations = concentrationsFor(v.id, findConcentrations(allVendors));
   const tierResult = calculateTier(v, concentrations.length > 0);
+  const classification = classify(v);
 
   return (
     <div className="sv-page">
@@ -64,6 +66,9 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
             <Fact label="Vendor tier">
               <TierChip value={tierResult.tier} />
               {tierResult.overridden && <span className="sv-caption"> (override — calculated: {tierResult.calculated})</span>}
+            </Fact>
+            <Fact label="IT Outsourcing classification">
+              <ClassificationChip value={classification.outcome} />
             </Fact>
             <Fact label="Data accessed">
               <div className="sv-body-sm">{v.dataSensitivity}</div>
@@ -91,6 +96,9 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
           </div>
           <Fact label={tierResult.overridden ? "Override justification" : "Why this tier"}>
             <div className="sv-body-sm">{tierResult.overridden ? v.tierOverrideReason || "—" : tierResult.reasons.join("; ")}</div>
+          </Fact>
+          <Fact label="Why this classification">
+            <div className="sv-body-sm">{classification.reason}</div>
           </Fact>
           <VendorProfileActions
             vendor={v}

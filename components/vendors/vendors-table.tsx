@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteRecord } from "@/actions/entity-actions";
 import { EntityFormDrawer } from "@/components/entity/entity-form-drawer";
-import { CriticalityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
+import { ClassificationChip, CriticalityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SearchInput } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
 import { PageHead } from "@/components/ui/page-head";
 import { SendRequestDrawer, type SendTarget } from "@/components/vendors/send-request-drawer";
 import { useToast } from "@/components/toast/toast-provider";
+import { classify } from "@/lib/classification";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
 import { fmtDate } from "@/lib/format";
 import { SCHEMA } from "@/lib/schema";
@@ -107,6 +108,7 @@ export function VendorsTable({
                 <th>Type</th>
                 <th>Criticality</th>
                 <th>Tier</th>
+                <th>IT Outsourcing</th>
                 <th>Owner</th>
                 <th>Status</th>
                 <th>Timeline</th>
@@ -137,6 +139,9 @@ export function VendorsTable({
                     </td>
                     <td>
                       <TierChip value={tier} />
+                    </td>
+                    <td>
+                      <ClassificationChip value={classify(v).outcome} />
                     </td>
                     <td className="sv-body-sm">{v.owner}</td>
                     <td>

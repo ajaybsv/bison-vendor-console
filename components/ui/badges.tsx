@@ -82,6 +82,17 @@ export function TierChip({ value }: { value: string }) {
   return <Badge tone={TIER_TONE[value] ?? "neutral"}>{value}</Badge>;
 }
 
+const CLASSIFICATION_TONE: Record<string, Tone> = {
+  "Potential IT Outsourcing": "warning",
+  "IT-related — Excluded": "neutral",
+  "Not IT-related": "neutral",
+  "IT-related — TPRM Review Required": "danger",
+};
+
+export function ClassificationChip({ value }: { value: string }) {
+  return <Badge tone={CLASSIFICATION_TONE[value] ?? "neutral"}>{value}</Badge>;
+}
+
 const FRESHNESS: Record<string, [Tone, IconName, string]> = {
   fresh: ["success", "checkCircle", "Fresh"],
   expiring: ["warning", "clock", "Expiring soon"],
