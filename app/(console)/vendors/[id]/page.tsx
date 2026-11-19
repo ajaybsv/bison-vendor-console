@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Badge, Chips, ClassificationChip, CriticalityChip, MaterialityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
+import { Badge, Chips, ClassificationChip, CriticalityChip, FreshChip, MaterialityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
 import { Icon } from "@/components/ui/icon";
 import { LinkRow } from "@/components/ui/link-row";
 import { PageHead } from "@/components/ui/page-head";
@@ -9,7 +9,7 @@ import { approvalConfigFromOrg, requiredApprovers } from "@/lib/approval";
 import { classify } from "@/lib/classification";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
 import { CONFIRMATION_AREAS } from "@/lib/constants";
-import { getOrganization, getVendor, listIssues, listTeam, listVendorRequests, listVendors } from "@/lib/data";
+import { getOrganization, getVendor, listEvidence, listIssues, listTeam, listVendorRequests, listVendors } from "@/lib/data";
 import { fmtDate, fmtInr, todayISO } from "@/lib/format";
 import { calculateMateriality } from "@/lib/materiality";
 import { questionCountsByControl } from "@/lib/questions";
@@ -33,18 +33,20 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
   const { id } = await params;
   const v = await getVendor(Number(id));
   if (!v) notFound();
-  const [cycles, team, questionCounts, allVendors, allIssues, org] = await Promise.all([
+  const [cycles, team, questionCounts, allVendors, allIssues, org, allEvidence] = await Promise.all([
     listVendorRequests(),
     listTeam(),
     questionCountsByControl(),
     listVendors(),
     listIssues(),
     getOrganization(),
+    listEvidence(),
   ]);
   const today = todayISO();
   const reqs = requestsFor(cycles, v.id);
   const latest = reqs[0] ?? null;
   const issues = allIssues.filter((i) => i.vendor === v.name);
+  const assurance = allEvidence.filter((e) => e.vendor === v.name);
   const concentrations = concentrationsFor(v.id, findConcentrations(allVendors));
   const tierResult = calculateTier(v, concentrations.length > 0, tierConfigFromOrg(org ?? {}));
   const classification = classify(v);
@@ -320,6 +322,42 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
                   </td>
                   <td className="sv-body-sm">{i.owner}</td>
                   <td className="sv-body-sm">{fmtDate(i.dueDate)}</td>
+                </LinkRow>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      <h2 className="sv-h3" style={{ margin: "var(--sv-space-5) 0 var(--sv-space-3)" }}>
+        Assurance & evidence
+      </h2>
+      <div className="sv-table__scroll">
+        <table className="sv-table">
+          <caption>Assurance documents held for {v.name}</caption>
+          <thead>
+            <tr>
+              <th>Document</th>
+              <th>Type</th>
+              <th>Expires</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assurance.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="sv-body-sm">
+                  No assurance evidence on file yet.
+                </td>
+              </tr>
+            ) : (
+              assurance.map((e) => (
+                <LinkRow key={e.id} href="/evidence">
+                  <td style={{ fontWeight: 600 }}>{e.name}</td>
+                  <td className="sv-body-sm">{e.type}</td>
+                  <td className="sv-body-sm">{fmtDate(e.expiry)}</td>
+                  <td>
+                    <FreshChip value={e.freshness} />
+                  </td>
                 </LinkRow>
               ))
             )}

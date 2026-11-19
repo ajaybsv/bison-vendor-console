@@ -107,6 +107,10 @@ async function main() {
       { name: "Insurance Certificate.pdf", type: "Insurance Certificate", uploaded: "2025-10-30", expiry: "2026-10-30", freshness: "expiring", usedBy: ["Vendor Due Diligence"] },
       { name: "Credit Rating Report.pdf", type: "Credit Rating", uploaded: "2025-11-05", expiry: "2026-11-05", freshness: "expiring", usedBy: ["Vendor Due Diligence"] },
       { name: "BCP Report.pdf", type: "BCP Report", uploaded: "2026-01-12", expiry: "2027-01-12", freshness: "fresh", usedBy: [] },
+      {
+        name: "Nimbus SOC 2 Type II Report.pdf", type: "SOC Report", vendor: "Nimbus Cloud Infrastructure",
+        uploaded: "2025-09-01", expiry: "2026-12-01", freshness: "expiring", usedBy: [],
+      },
     ],
   });
 

@@ -66,12 +66,20 @@ export const SCHEMA: Record<EntityKey, EntitySchema> = {
     columns: [
       ["name", "Document"],
       ["type", "Type"],
+      ["vendor", "For vendor"],
       ["expiry", "Expires"],
       ["freshness", "Status"],
     ],
     fields: [
       { k: "name", l: "Document name", t: "text", req: true, ph: "SOC 2 Type II Report.pdf" },
       { k: "type", l: "Evidence type", t: "select", req: true, opts: EVI_TYPES },
+      {
+        k: "vendor",
+        l: "Assurance for vendor",
+        t: "select",
+        optsFrom: "vendors",
+        help: "Leave blank for your own Trust Pack evidence. Pick a vendor to record this as their assurance evidence (SOC/ISO report, certificate…).",
+      },
       { k: "uploaded", l: "Uploaded", t: "date", today: true },
       { k: "expiry", l: "Expiry date", t: "date" },
       { k: "file", l: "File", t: "file" },

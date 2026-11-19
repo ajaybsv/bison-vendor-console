@@ -2,7 +2,7 @@ import { CriticalityChip, MaterialityChip, StatusChip, TierChip } from "@/compon
 import { LinkRow } from "@/components/ui/link-row";
 import { listActivity } from "@/lib/activity";
 import { findConcentrations } from "@/lib/concentration";
-import { getOrganization, listIssues, listVendorRequests, listVendors } from "@/lib/data";
+import { getOrganization, listEvidence, listIssues, listVendorRequests, listVendors } from "@/lib/data";
 import { daysUntil, fmtDate, todayISO } from "@/lib/format";
 import { calculateMateriality } from "@/lib/materiality";
 import { isInFlight, vendorStatus } from "@/lib/status";
@@ -11,12 +11,13 @@ import { calculateTier, tierConfigFromOrg } from "@/lib/tiering";
 export const metadata = { title: "Reports — BISON" };
 
 export default async function ReportsPage() {
-  const [vendors, cycles, issues, org, activity] = await Promise.all([
+  const [vendors, cycles, issues, org, activity, evidence] = await Promise.all([
     listVendors(),
     listVendorRequests(),
     listIssues(),
     getOrganization(),
     listActivity(50),
+    listEvidence(),
   ]);
   const today = todayISO();
   const concentrations = findConcentrations(vendors);
@@ -41,6 +42,7 @@ export default async function ReportsPage() {
     const d = daysUntil(i.dueDate, today);
     return i.status !== "Closed" && d != null && d < 0;
   });
+  const assuranceExpiring = evidence.filter((e) => e.vendor && (e.freshness === "expiring" || e.freshness === "expired"));
 
   return (
     <div className="sv-page">
@@ -97,7 +99,7 @@ export default async function ReportsPage() {
       </div>
 
       <h2 className="sv-h3" style={{ marginBottom: "var(--sv-space-3)" }}>
-        Overdue actions ({overdueReviews.length + overdueIssues.length})
+        Overdue actions ({overdueReviews.length + overdueIssues.length + assuranceExpiring.length})
       </h2>
       <div className="row wrap" style={{ alignItems: "flex-start", marginBottom: "var(--sv-space-5)" }}>
         <div className="col sv-table__scroll" style={{ flex: 1, minWidth: 320 }}>
@@ -150,6 +152,35 @@ export default async function ReportsPage() {
                       {i.title} <span className="sv-caption">— {i.vendor}</span>
                     </td>
                     <td className="sv-body-sm">{fmtDate(i.dueDate)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="col sv-table__scroll" style={{ flex: 1, minWidth: 320 }}>
+          <table className="sv-table">
+            <caption>Vendor assurance expiring or expired</caption>
+            <thead>
+              <tr>
+                <th>Document</th>
+                <th>Expires</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assuranceExpiring.length === 0 ? (
+                <tr>
+                  <td colSpan={2} className="sv-body-sm">
+                    Nothing expiring.
+                  </td>
+                </tr>
+              ) : (
+                assuranceExpiring.map((e) => (
+                  <tr key={e.id}>
+                    <td style={{ fontWeight: 600 }}>
+                      {e.name} <span className="sv-caption">— {e.vendor}</span>
+                    </td>
+                    <td className="sv-body-sm">{fmtDate(e.expiry)}</td>
                   </tr>
                 ))
               )}

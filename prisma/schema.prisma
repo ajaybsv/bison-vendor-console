@@ -144,6 +144,10 @@ model EvidenceItem {
   expiry    String?
   freshness String   @default("fresh")
   usedBy    String[] @default([])
+  // When set, this is assurance evidence (SOC/ISO report, certificate…) for a specific
+  // vendor of ours — matching how Issue.vendor stores a vendor's name, not a foreign key.
+  // Blank means it's a Trust Pack item we hold on ourselves.
+  vendor    String?
   createdAt DateTime @default(now())
 
   @@map("evidence_items")
