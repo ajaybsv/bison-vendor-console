@@ -1,4 +1,5 @@
 import { CONTROLS, EVI_TYPES, FRAMEWORKS, ROLES, type Area } from "@/lib/constants";
+import { TIERS } from "@/lib/tiering";
 
 export type EntityKey = "answers" | "evidence" | "team" | "vendors";
 
@@ -184,6 +185,14 @@ export const SCHEMA: Record<EntityKey, EntitySchema> = {
         editOnly: true,
         def: "Pending",
       },
+      {
+        k: "tierOverride",
+        l: "Vendor tier override",
+        t: "select",
+        opts: TIERS,
+        help: "Leave blank to use the calculated tier shown on the profile. Set this only to deliberately override it.",
+      },
+      { k: "tierOverrideReason", l: "Override justification", t: "textarea", ph: "Why the calculated tier doesn't fit this vendor" },
       { k: "contractStart", l: "Contract start", t: "date" },
       {
         k: "cadence",

@@ -5,17 +5,18 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteRecord } from "@/actions/entity-actions";
 import { EntityFormDrawer } from "@/components/entity/entity-form-drawer";
-import { CriticalityChip, ReviewBadge, StatusChip, WarningAlert } from "@/components/ui/badges";
+import { CriticalityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SearchInput } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
 import { PageHead } from "@/components/ui/page-head";
 import { SendRequestDrawer, type SendTarget } from "@/components/vendors/send-request-drawer";
 import { useToast } from "@/components/toast/toast-provider";
-import { findConcentrations } from "@/lib/concentration";
+import { concentrationsFor, findConcentrations } from "@/lib/concentration";
 import { fmtDate } from "@/lib/format";
 import { SCHEMA } from "@/lib/schema";
 import { isInFlight, latestRequestFor, reviewState, vendorStatus } from "@/lib/status";
+import { calculateTier } from "@/lib/tiering";
 import type { Vendor, VendorRequest } from "@/lib/types";
 
 export function sendTargetFor(v: Vendor, cycles: VendorRequest[]): SendTarget {
@@ -105,6 +106,7 @@ export function VendorsTable({
                 <th>Vendor</th>
                 <th>Type</th>
                 <th>Criticality</th>
+                <th>Tier</th>
                 <th>Owner</th>
                 <th>Status</th>
                 <th>Timeline</th>
@@ -116,6 +118,8 @@ export function VendorsTable({
                 const status = vendorStatus(cycles, v.id);
                 const latest = latestRequestFor(cycles, v.id);
                 const inFlight = isInFlight(status);
+                const hasConcentration = concentrationsFor(v.id, concentrations).length > 0;
+                const { tier } = calculateTier(v, hasConcentration);
                 return (
                   <tr key={v.id}>
                     <td>
@@ -130,6 +134,9 @@ export function VendorsTable({
                     <td className="sv-body-sm">{v.type}</td>
                     <td>
                       <CriticalityChip value={v.criticality} />
+                    </td>
+                    <td>
+                      <TierChip value={tier} />
                     </td>
                     <td className="sv-body-sm">{v.owner}</td>
                     <td>

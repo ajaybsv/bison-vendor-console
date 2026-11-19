@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Chips, CriticalityChip, ReviewBadge, StatusChip, WarningAlert } from "@/components/ui/badges";
+import { Chips, CriticalityChip, ReviewBadge, StatusChip, TierChip, WarningAlert } from "@/components/ui/badges";
 import { Icon } from "@/components/ui/icon";
 import { LinkRow } from "@/components/ui/link-row";
 import { PageHead } from "@/components/ui/page-head";
@@ -10,6 +10,7 @@ import { getVendor, listTeam, listVendorRequests, listVendors } from "@/lib/data
 import { fmtDate, todayISO } from "@/lib/format";
 import { questionCountsByControl } from "@/lib/questions";
 import { requestsFor, reviewState, vendorStatus } from "@/lib/status";
+import { calculateTier } from "@/lib/tiering";
 
 export const metadata = { title: "Vendor — BISON" };
 
@@ -38,6 +39,7 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
   const reqs = requestsFor(cycles, v.id);
   const latest = reqs[0] ?? null;
   const concentrations = concentrationsFor(v.id, findConcentrations(allVendors));
+  const tierResult = calculateTier(v, concentrations.length > 0);
 
   return (
     <div className="sv-page">
@@ -56,6 +58,10 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
           <div className="grid g2">
             <Fact label="Criticality">
               <CriticalityChip value={v.criticality} />
+            </Fact>
+            <Fact label="Vendor tier">
+              <TierChip value={tierResult.tier} />
+              {tierResult.overridden && <span className="sv-caption"> (override — calculated: {tierResult.calculated})</span>}
             </Fact>
             <Fact label="Data accessed">
               <div className="sv-body-sm">{v.dataSensitivity}</div>
@@ -81,6 +87,9 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
               <ReviewBadge state={reviewState(v, cycles, today)} />
             </Fact>
           </div>
+          <Fact label={tierResult.overridden ? "Override justification" : "Why this tier"}>
+            <div className="sv-body-sm">{tierResult.overridden ? v.tierOverrideReason || "—" : tierResult.reasons.join("; ")}</div>
+          </Fact>
           <VendorProfileActions
             vendor={v}
             latest={latest}

@@ -71,6 +71,17 @@ export function CriticalityChip({ value }: { value: string | null | undefined })
   );
 }
 
+const TIER_TONE: Record<string, Tone> = {
+  "Tier 1 – Critical": "danger",
+  "Tier 2 – High": "warning",
+  "Tier 3 – Moderate": "brand",
+  "Tier 4 – Low": "neutral",
+};
+
+export function TierChip({ value }: { value: string }) {
+  return <Badge tone={TIER_TONE[value] ?? "neutral"}>{value}</Badge>;
+}
+
 const FRESHNESS: Record<string, [Tone, IconName, string]> = {
   fresh: ["success", "checkCircle", "Fresh"],
   expiring: ["warning", "clock", "Expiring soon"],
