@@ -238,3 +238,28 @@ model VendorRequestEvidence {
 
   @@map("vendor_request_evidence")
 }
+
+// ---------- Issues & exceptions (8A) ----------
+
+/// A finding raised against a vendor, tracked through remediation, exception and risk
+/// acceptance to closure. `vendor` is the vendor's name, stored plainly — matching how
+/// `Vendor.owner` stores a team member's name — not a foreign key.
+model Issue {
+  id                      Int      @id @default(autoincrement())
+  vendor                  String
+  title                   String
+  description             String?
+  severity                String
+  status                  String   @default("Open")
+  owner                   String
+  dueDate                 String?
+  exceptionJustification  String?
+  exceptionStatus         String?
+  riskAcceptanceRationale String?
+  riskAcceptanceExpiry    String?
+  riskAcceptanceStatus    String   @default("Not Required")
+  closureEvidence         String?
+  createdAt               DateTime @default(now())
+
+  @@map("issues")
+}

@@ -1,7 +1,7 @@
 import { CONTROLS, EVI_TYPES, FRAMEWORKS, ROLES, type Area } from "@/lib/constants";
 import { TIERS } from "@/lib/tiering";
 
-export type EntityKey = "answers" | "evidence" | "team" | "vendors";
+export type EntityKey = "answers" | "evidence" | "team" | "vendors" | "issues";
 
 export type Field = {
   k: string;
@@ -9,8 +9,8 @@ export type Field = {
   t: "text" | "textarea" | "select" | "date" | "checklist" | "file";
   req?: boolean;
   opts?: readonly string[];
-  /** Options supplied at runtime (e.g. current team members). */
-  optsFrom?: "team";
+  /** Options supplied at runtime (current team members, or current vendors). */
+  optsFrom?: "team" | "vendors";
   ph?: string;
   help?: string;
   /** Default new records to today's date. */
@@ -203,6 +203,67 @@ export const SCHEMA: Record<EntityKey, EntitySchema> = {
         help: "How often this vendor must be reassessed — drives the next-review date.",
       },
       { k: "nextReview", l: "Next scheduled review", t: "date" },
+    ],
+  },
+  issues: {
+    key: "issues",
+    area: "vendors",
+    path: "/issues",
+    nav: "Issues & Exceptions",
+    singular: "issue",
+    intro: "Findings raised against a vendor, tracked through remediation, exceptions and risk acceptance to closure.",
+    caption: "Findings and their status",
+    columns: [
+      ["vendor", "Vendor"],
+      ["title", "Finding"],
+      ["severity", "Severity"],
+      ["status", "Status"],
+    ],
+    fields: [
+      { k: "vendor", l: "Vendor", t: "select", req: true, optsFrom: "vendors" },
+      { k: "title", l: "Finding", t: "text", req: true, ph: "No MFA on admin console access" },
+      { k: "description", l: "Description", t: "textarea", ph: "What was found, and where" },
+      { k: "severity", l: "Severity", t: "select", req: true, opts: ["Critical", "High", "Medium", "Low"] },
+      { k: "owner", l: "Internal owner", t: "select", req: true, optsFrom: "team", help: "Who is accountable for getting this remediated." },
+      { k: "dueDate", l: "Remediation due", t: "date" },
+      {
+        k: "status",
+        l: "Status",
+        t: "select",
+        opts: ["Open", "In Progress", "Pending Vendor", "Pending Internal Review", "Closed"],
+        editOnly: true,
+        def: "Open",
+      },
+      {
+        k: "exceptionJustification",
+        l: "Exception justification",
+        t: "textarea",
+        ph: "Business reason the requirement can't be met, plus any compensating controls",
+      },
+      {
+        k: "exceptionStatus",
+        l: "Exception status",
+        t: "select",
+        opts: ["Draft", "Submitted", "Approved", "Rejected", "Expired", "Withdrawn"],
+        help: "Leave blank if no exception has been requested for this finding.",
+      },
+      { k: "riskAcceptanceRationale", l: "Risk acceptance rationale", t: "textarea", ph: "Why the residual risk is being accepted rather than remediated" },
+      { k: "riskAcceptanceExpiry", l: "Risk acceptance expiry", t: "date", help: "The acceptance reopens for review once this date passes." },
+      {
+        k: "riskAcceptanceStatus",
+        l: "Risk acceptance status",
+        t: "select",
+        opts: ["Not Required", "Pending", "Accepted", "Rejected", "Expired"],
+        editOnly: true,
+        def: "Not Required",
+      },
+      {
+        k: "closureEvidence",
+        l: "Closure evidence",
+        t: "textarea",
+        ph: "Evidence the remediation was completed and validated",
+        editOnly: true,
+      },
     ],
   },
 };

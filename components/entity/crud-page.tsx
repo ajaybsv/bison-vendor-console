@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteRecord } from "@/actions/entity-actions";
 import { EntityFormDrawer } from "@/components/entity/entity-form-drawer";
-import { CatBadge, FreshChip, StatusChip } from "@/components/ui/badges";
+import { CatBadge, CriticalityChip, FreshChip, StatusChip } from "@/components/ui/badges";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SearchInput } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
@@ -18,6 +18,7 @@ type AnyRow = { id: number } & Record<string, unknown>;
 function Cell({ k, row }: { k: string; row: AnyRow }) {
   const v = row[k];
   if (k === "status") return <StatusChip value={String(v)} />;
+  if (k === "severity") return <CriticalityChip value={v as string} />;
   if (k === "freshness") return <FreshChip value={String(v)} />;
   if (k === "role") return <CatBadge>{(v as string) || "—"}</CatBadge>;
   if (k === "control") return <span className="sv-code">{(v as string) || "—"}</span>;
@@ -31,8 +32,20 @@ export function displayName(row: AnyRow): string {
   return (row.name as string) || (row.q as string) || "this item";
 }
 
-/** Trust Pack answers/evidence and Team: search, table, add/edit drawer, delete confirm. */
-export function CrudPage({ entity, rows, today }: { entity: EntityKey; rows: AnyRow[]; today: string }) {
+/** Trust Pack answers/evidence, Team and Issues: search, table, add/edit drawer, delete confirm. */
+export function CrudPage({
+  entity,
+  rows,
+  today,
+  teamNames = [],
+  vendorNames = [],
+}: {
+  entity: EntityKey;
+  rows: AnyRow[];
+  today: string;
+  teamNames?: string[];
+  vendorNames?: string[];
+}) {
   const s = SCHEMA[entity];
   const router = useRouter();
   const { showToast } = useToast();
@@ -111,7 +124,15 @@ export function CrudPage({ entity, rows, today }: { entity: EntityKey; rows: Any
           </table>
         )}
       </div>
-      <EntityFormDrawer schema={s} open={drawer.open} row={drawer.row} today={today} onClose={() => setDrawer((d) => ({ ...d, open: false }))} />
+      <EntityFormDrawer
+        schema={s}
+        open={drawer.open}
+        row={drawer.row}
+        today={today}
+        teamNames={teamNames}
+        vendorNames={vendorNames}
+        onClose={() => setDrawer((d) => ({ ...d, open: false }))}
+      />
       <ConfirmModal open={deleting != null} title={`Delete ${s.singular}?`} pending={pending} onConfirm={confirmDelete} onClose={() => setDeleting(null)}>
         <b>{deleting ? displayName(deleting) : ""}</b> will be removed. This can&apos;t be undone.
       </ConfirmModal>

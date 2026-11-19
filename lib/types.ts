@@ -2,6 +2,7 @@ import type {
   ClientRequest,
   EvidenceItem,
   HistoryEntry,
+  Issue,
   Question,
   TeamMember,
   TrustAnswer,
@@ -15,6 +16,7 @@ export type {
   ClientRequest,
   EvidenceItem,
   HistoryEntry,
+  Issue,
   Question,
   TrustAnswer,
   Vendor,
@@ -40,5 +42,6 @@ export type NavCounts = {
   evidence: number;
   vendors: number;
   sentrequests: number;
+  issues: number;
   team: number;
 };

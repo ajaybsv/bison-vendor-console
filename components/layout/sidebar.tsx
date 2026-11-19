@@ -29,6 +29,7 @@ const NAV: { grp: string; items: NavItem[] }[] = [
     items: [
       { href: "/vendors", label: "Vendors", icon: "building", count: "vendors" },
       { href: "/sent-requests", label: "Sent Requests", icon: "send", count: "sentrequests" },
+      { href: "/issues", label: "Issues & Exceptions", icon: "alertTriangle", count: "issues" },
     ],
   },
   {

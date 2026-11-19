@@ -31,6 +31,7 @@ export function EntityFormDrawer({
   row,
   today,
   teamNames = [],
+  vendorNames = [],
   onClose,
 }: {
   schema: EntitySchema;
@@ -38,6 +39,7 @@ export function EntityFormDrawer({
   row: AnyRow | null;
   today: string;
   teamNames?: string[];
+  vendorNames?: string[];
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -90,7 +92,7 @@ export function EntityFormDrawer({
         if (f.editOnly && !editing) return null;
         const id = `f_${f.k}`;
         const val = values[f.k];
-        const opts = f.optsFrom === "team" ? teamNames : (f.opts ?? []);
+        const opts = f.optsFrom === "team" ? teamNames : f.optsFrom === "vendors" ? vendorNames : (f.opts ?? []);
         return (
           <div className="sv-field" key={f.k}>
             <label className="sv-field__label" htmlFor={id}>

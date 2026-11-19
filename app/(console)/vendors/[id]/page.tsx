@@ -6,7 +6,7 @@ import { LinkRow } from "@/components/ui/link-row";
 import { PageHead } from "@/components/ui/page-head";
 import { VendorProfileActions } from "@/components/vendors/vendor-profile-actions";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
-import { getVendor, listTeam, listVendorRequests, listVendors } from "@/lib/data";
+import { getVendor, listIssues, listTeam, listVendorRequests, listVendors } from "@/lib/data";
 import { fmtDate, todayISO } from "@/lib/format";
 import { questionCountsByControl } from "@/lib/questions";
 import { requestsFor, reviewState, vendorStatus } from "@/lib/status";
@@ -29,15 +29,17 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
   const { id } = await params;
   const v = await getVendor(Number(id));
   if (!v) notFound();
-  const [cycles, team, questionCounts, allVendors] = await Promise.all([
+  const [cycles, team, questionCounts, allVendors, allIssues] = await Promise.all([
     listVendorRequests(),
     listTeam(),
     questionCountsByControl(),
     listVendors(),
+    listIssues(),
   ]);
   const today = todayISO();
   const reqs = requestsFor(cycles, v.id);
   const latest = reqs[0] ?? null;
+  const issues = allIssues.filter((i) => i.vendor === v.name);
   const concentrations = concentrationsFor(v.id, findConcentrations(allVendors));
   const tierResult = calculateTier(v, concentrations.length > 0);
 
@@ -184,6 +186,46 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
                   <td style={{ textAlign: "right" }}>
                     <button className="sv-btn sv-btn--tertiary sv-btn--sm">View</button>
                   </td>
+                </LinkRow>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      <h2 className="sv-h3" style={{ margin: "var(--sv-space-5) 0 var(--sv-space-3)" }}>
+        Issues & exceptions
+      </h2>
+      <div className="sv-table__scroll">
+        <table className="sv-table">
+          <caption>Findings raised against {v.name}</caption>
+          <thead>
+            <tr>
+              <th>Finding</th>
+              <th>Severity</th>
+              <th>Status</th>
+              <th>Owner</th>
+              <th>Due</th>
+            </tr>
+          </thead>
+          <tbody>
+            {issues.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="sv-body-sm">
+                  No findings raised yet.
+                </td>
+              </tr>
+            ) : (
+              issues.map((i) => (
+                <LinkRow key={i.id} href="/issues">
+                  <td style={{ fontWeight: 600 }}>{i.title}</td>
+                  <td>
+                    <CriticalityChip value={i.severity} />
+                  </td>
+                  <td>
+                    <StatusChip value={i.status} />
+                  </td>
+                  <td className="sv-body-sm">{i.owner}</td>
+                  <td className="sv-body-sm">{fmtDate(i.dueDate)}</td>
                 </LinkRow>
               ))
             )}

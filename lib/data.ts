@@ -5,16 +5,17 @@ import type { Member, NavCounts } from "@/lib/types";
 const memberSelect = { id: true, name: true, email: true, role: true, status: true } as const;
 
 export async function navCounts(): Promise<NavCounts> {
-  const [requests, history, answers, evidence, vendors, sentrequests, team] = await Promise.all([
+  const [requests, history, answers, evidence, vendors, sentrequests, issues, team] = await Promise.all([
     prisma.clientRequest.count(),
     prisma.historyEntry.count(),
     prisma.trustAnswer.count(),
     prisma.evidenceItem.count(),
     prisma.vendor.count(),
     prisma.vendorRequest.count(),
+    prisma.issue.count(),
     prisma.teamMember.count(),
   ]);
-  return { requests, history, answers, evidence, vendors, sentrequests, team };
+  return { requests, history, answers, evidence, vendors, sentrequests, issues, team };
 }
 
 export function getOrganization() {
@@ -88,4 +89,9 @@ export function getVendorRequest(id: number) {
     where: { id },
     include: { responses: true, evidence: { orderBy: { id: "asc" } } },
   });
+}
+
+/* ---------- issues & exceptions ---------- */
+export function listIssues() {
+  return prisma.issue.findMany({ orderBy: { id: "desc" } });
 }

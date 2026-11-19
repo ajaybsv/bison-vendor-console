@@ -29,6 +29,7 @@ function delegate(entity: EntityKey) {
     evidence: prisma.evidenceItem,
     team: prisma.teamMember,
     vendors: prisma.vendor,
+    issues: prisma.issue,
   }[entity] as unknown as {
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
     update(args: { where: { id: number }; data: Record<string, unknown> }): Promise<unknown>;
