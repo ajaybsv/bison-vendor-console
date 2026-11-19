@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/lib/activity";
+import { BOARD_TRIGGERS, CEO_TRIGGERS } from "@/lib/approval";
 import { VENDOR_TYPES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { authorize, type ActionResult } from "@/lib/session";
+import { TIERS } from "@/lib/tiering";
 
 export type OrgProfile = {
   name: string;
@@ -20,6 +22,13 @@ export type MaterialityThresholds = {
   materialityDisruptionHours: string;
   materialityCustomerPct: string;
   materialityFinancialImpact: string;
+};
+
+export type GovernanceRules = {
+  tierConcentrationTrigger: string;
+  tierLimitedAlternativesTrigger: string;
+  approvalCeoTrigger: string;
+  approvalBoardTrigger: string;
 };
 
 async function orgId(): Promise<number | null> {
@@ -84,6 +93,21 @@ export async function saveMaterialityThresholds(thresholds: MaterialityThreshold
   if (!id) return { ok: false, error: "Save the organization profile first" };
   await prisma.organization.update({ where: { id }, data });
   await logActivity("settings", "updated", "Materiality thresholds", auth.name);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function saveGovernanceRules(rules: GovernanceRules): Promise<ActionResult> {
+  const auth = await authorize("settings");
+  if ("ok" in auth) return auth;
+  if (!(TIERS as readonly string[]).includes(rules.tierConcentrationTrigger)) return { ok: false, error: "Pick a valid tier" };
+  if (!(TIERS as readonly string[]).includes(rules.tierLimitedAlternativesTrigger)) return { ok: false, error: "Pick a valid tier" };
+  if (!(CEO_TRIGGERS as readonly string[]).includes(rules.approvalCeoTrigger)) return { ok: false, error: "Pick a valid CEO rule" };
+  if (!(BOARD_TRIGGERS as readonly string[]).includes(rules.approvalBoardTrigger)) return { ok: false, error: "Pick a valid Board rule" };
+  const id = await orgId();
+  if (!id) return { ok: false, error: "Save the organization profile first" };
+  await prisma.organization.update({ where: { id }, data: rules });
+  await logActivity("settings", "updated", "Tiering & approval rules", auth.name);
   revalidatePath("/", "layout");
   return { ok: true };
 }

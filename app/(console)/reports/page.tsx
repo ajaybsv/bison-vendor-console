@@ -6,7 +6,7 @@ import { getOrganization, listIssues, listVendorRequests, listVendors } from "@/
 import { daysUntil, fmtDate, todayISO } from "@/lib/format";
 import { calculateMateriality } from "@/lib/materiality";
 import { isInFlight, vendorStatus } from "@/lib/status";
-import { calculateTier } from "@/lib/tiering";
+import { calculateTier, tierConfigFromOrg } from "@/lib/tiering";
 
 export const metadata = { title: "Reports — BISON" };
 
@@ -21,10 +21,15 @@ export default async function ReportsPage() {
   const today = todayISO();
   const concentrations = findConcentrations(vendors);
   const orgThresholds = org ?? { materialityDisruptionHours: null, materialityCustomerPct: null, materialityFinancialImpact: null };
+  const tierConfig = tierConfigFromOrg(org ?? {});
 
   const vendorRisk = vendors.map((v) => {
     const hasConcentration = concentrations.some((g) => g.vendors.some((x) => x.id === v.id));
-    return { vendor: v, tier: calculateTier(v, hasConcentration).tier, materiality: calculateMateriality(v, orgThresholds, hasConcentration).outcome };
+    return {
+      vendor: v,
+      tier: calculateTier(v, hasConcentration, tierConfig).tier,
+      materiality: calculateMateriality(v, orgThresholds, hasConcentration).outcome,
+    };
   });
   const materialInventory = vendorRisk.filter((r) => r.tier === "Tier 1 – Critical" || r.materiality === "Potential Material");
 

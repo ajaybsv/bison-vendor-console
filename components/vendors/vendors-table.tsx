@@ -18,7 +18,7 @@ import { fmtDate } from "@/lib/format";
 import { calculateMateriality } from "@/lib/materiality";
 import { SCHEMA } from "@/lib/schema";
 import { isInFlight, latestRequestFor, reviewState, vendorStatus } from "@/lib/status";
-import { calculateTier } from "@/lib/tiering";
+import { calculateTier, tierConfigFromOrg } from "@/lib/tiering";
 import type { Organization, Vendor, VendorRequest } from "@/lib/types";
 
 export function sendTargetFor(v: Vendor, cycles: VendorRequest[]): SendTarget {
@@ -57,6 +57,7 @@ export function VendorsTable({
   const q = query.toLowerCase();
   const rows = vendors.filter((v) => !q || Object.values(v).join(" ").toLowerCase().includes(q));
   const concentrations = findConcentrations(vendors);
+  const tierConfig = tierConfigFromOrg(org ?? {});
 
   function closeSend() {
     setSendTarget(null);
@@ -125,7 +126,7 @@ export function VendorsTable({
                 const latest = latestRequestFor(cycles, v.id);
                 const inFlight = isInFlight(status);
                 const hasConcentration = concentrationsFor(v.id, concentrations).length > 0;
-                const { tier } = calculateTier(v, hasConcentration);
+                const { tier } = calculateTier(v, hasConcentration, tierConfig);
                 return (
                   <tr key={v.id}>
                     <td>

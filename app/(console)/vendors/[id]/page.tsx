@@ -5,7 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import { LinkRow } from "@/components/ui/link-row";
 import { PageHead } from "@/components/ui/page-head";
 import { VendorProfileActions } from "@/components/vendors/vendor-profile-actions";
-import { requiredApprovers } from "@/lib/approval";
+import { approvalConfigFromOrg, requiredApprovers } from "@/lib/approval";
 import { classify } from "@/lib/classification";
 import { concentrationsFor, findConcentrations } from "@/lib/concentration";
 import { CONFIRMATION_AREAS } from "@/lib/constants";
@@ -14,7 +14,7 @@ import { fmtDate, todayISO } from "@/lib/format";
 import { calculateMateriality } from "@/lib/materiality";
 import { questionCountsByControl } from "@/lib/questions";
 import { requestsFor, reviewState, vendorStatus } from "@/lib/status";
-import { calculateTier } from "@/lib/tiering";
+import { calculateTier, tierConfigFromOrg } from "@/lib/tiering";
 
 export const metadata = { title: "Vendor — BISON" };
 
@@ -46,14 +46,14 @@ export default async function VendorProfilePage({ params }: PageProps<"/vendors/
   const latest = reqs[0] ?? null;
   const issues = allIssues.filter((i) => i.vendor === v.name);
   const concentrations = concentrationsFor(v.id, findConcentrations(allVendors));
-  const tierResult = calculateTier(v, concentrations.length > 0);
+  const tierResult = calculateTier(v, concentrations.length > 0, tierConfigFromOrg(org ?? {}));
   const classification = classify(v);
   const materiality = calculateMateriality(
     v,
     org ?? { materialityDisruptionHours: null, materialityCustomerPct: null, materialityFinancialImpact: null },
     concentrations.length > 0
   );
-  const approvers = requiredApprovers(v, tierResult.tier, materiality.outcome, classification.outcome);
+  const approvers = requiredApprovers(v, tierResult.tier, materiality.outcome, classification.outcome, approvalConfigFromOrg(org ?? {}));
 
   return (
     <div className="sv-page">

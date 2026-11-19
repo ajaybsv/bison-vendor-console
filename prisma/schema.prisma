@@ -28,6 +28,11 @@ model Organization {
   materialityDisruptionHours  String?
   materialityCustomerPct      String?
   materialityFinancialImpact  String?
+  // ---- Tiering & approval escalation rules (5A / 6) — org-configured, never hard-coded. ----
+  tierConcentrationTrigger      String?
+  tierLimitedAlternativesTrigger String?
+  approvalCeoTrigger            String?
+  approvalBoardTrigger          String?
 
   @@map("organization")
 }

@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
+  saveGovernanceRules,
   saveMaterialityThresholds,
   saveOrgProfile,
   setNotification,
+  type GovernanceRules,
   type MaterialityThresholds,
   type NotificationKey,
   type OrgProfile,
@@ -13,7 +15,9 @@ import {
 import { Checkbox, Select } from "@/components/ui/form";
 import { PageHead } from "@/components/ui/page-head";
 import { useToast } from "@/components/toast/toast-provider";
+import { BOARD_TRIGGERS, CEO_TRIGGERS } from "@/lib/approval";
 import { VENDOR_TYPES } from "@/lib/constants";
+import { TIERS } from "@/lib/tiering";
 
 const NOTIFICATIONS: [NotificationKey, string][] = [
   ["notifReminders", "Due-date reminders"],
@@ -25,20 +29,25 @@ export function SettingsForm({
   profile,
   notifications,
   materiality,
+  governance,
 }: {
   profile: OrgProfile;
   notifications: Record<NotificationKey, boolean>;
   materiality: MaterialityThresholds;
+  governance: GovernanceRules;
 }) {
   const router = useRouter();
   const { showToast } = useToast();
   const [form, setForm] = useState(profile);
   const [notif, setNotif] = useState(notifications);
   const [thresholds, setThresholds] = useState(materiality);
+  const [rules, setRules] = useState(governance);
   const [pending, startTransition] = useTransition();
   const [thresholdsPending, startThresholdsTransition] = useTransition();
+  const [rulesPending, startRulesTransition] = useTransition();
   const set = (k: keyof OrgProfile) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
   const setThreshold = (k: keyof MaterialityThresholds) => (v: string) => setThresholds((t) => ({ ...t, [k]: v }));
+  const setRule = (k: keyof GovernanceRules) => (v: string) => setRules((r) => ({ ...r, [k]: v }));
 
   function save() {
     startTransition(async () => {
@@ -54,6 +63,15 @@ export function SettingsForm({
       const res = await saveMaterialityThresholds(thresholds);
       if (!res.ok) return showToast(res.error, "danger");
       showToast("Materiality thresholds saved");
+      router.refresh();
+    });
+  }
+
+  function saveRules() {
+    startRulesTransition(async () => {
+      const res = await saveGovernanceRules(rules);
+      if (!res.ok) return showToast(res.error, "danger");
+      showToast("Tiering & approval rules saved");
       router.refresh();
     });
   }
@@ -192,6 +210,56 @@ export function SettingsForm({
         <div className="sv-card__footer" style={{ borderTop: 0, paddingTop: 0, justifyContent: "flex-end" }}>
           <button className="sv-btn sv-btn--primary" onClick={saveThresholds} disabled={thresholdsPending}>
             Save thresholds
+          </button>
+        </div>
+      </div>
+      <div className="sv-card" style={{ marginTop: "var(--sv-space-5)" }}>
+        <div className="sv-card__eyebrow">Tiering & approval rules</div>
+        <div className="sv-body-sm" style={{ marginTop: -4 }}>
+          How far a concentration flag or limited replaceability pushes a vendor&apos;s tier, and when CEO or Board sign-off is required —
+          configurable here instead of fixed in code.
+        </div>
+        <div className="grid g2">
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setTierConcentration">
+              Concentration escalates tier to
+            </label>
+            <Select
+              id="setTierConcentration"
+              value={rules.tierConcentrationTrigger}
+              options={[...TIERS]}
+              onChange={setRule("tierConcentrationTrigger")}
+            />
+            <div className="sv-field__hint">Applied when a vendor shares a legal entity, group, subcontractor or cloud provider with another.</div>
+          </div>
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setTierAlternatives">
+              Limited alternatives escalates tier to
+            </label>
+            <Select
+              id="setTierAlternatives"
+              value={rules.tierLimitedAlternativesTrigger}
+              options={[...TIERS]}
+              onChange={setRule("tierLimitedAlternativesTrigger")}
+            />
+            <div className="sv-field__hint">Applied when a vendor&apos;s alternative providers are Limited or Not practical.</div>
+          </div>
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setApprovalCeo">
+              CEO / Senior Management sign-off required when
+            </label>
+            <Select id="setApprovalCeo" value={rules.approvalCeoTrigger} options={[...CEO_TRIGGERS]} onChange={setRule("approvalCeoTrigger")} />
+          </div>
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setApprovalBoard">
+              Board / Committee sign-off required when
+            </label>
+            <Select id="setApprovalBoard" value={rules.approvalBoardTrigger} options={[...BOARD_TRIGGERS]} onChange={setRule("approvalBoardTrigger")} />
+          </div>
+        </div>
+        <div className="sv-card__footer" style={{ borderTop: 0, paddingTop: 0, justifyContent: "flex-end" }}>
+          <button className="sv-btn sv-btn--primary" onClick={saveRules} disabled={rulesPending}>
+            Save rules
           </button>
         </div>
       </div>
