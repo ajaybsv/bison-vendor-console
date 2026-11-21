@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { deleteRecord } from "@/actions/entity-actions";
+import { deleteRecord, resendInvite } from "@/actions/entity-actions";
 import { EntityFormDrawer } from "@/components/entity/entity-form-drawer";
 import { CatBadge, CriticalityChip, FreshChip, StatusChip } from "@/components/ui/badges";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
@@ -68,6 +68,15 @@ export function CrudPage({
     });
   }
 
+  function resend(id: number) {
+    startTransition(async () => {
+      const res = await resendInvite(id);
+      if (!res.ok) return showToast(res.error, "danger");
+      showToast("Invite resent");
+      router.refresh();
+    });
+  }
+
   return (
     <div className="sv-page">
       <PageHead title={s.nav} intro={s.intro} />
@@ -108,6 +117,12 @@ export function CrudPage({
                   ))}
                   <td>
                     <div className="rowact">
+                      {entity === "team" && r.status === "Invited" && (
+                        <button className="sv-btn sv-btn--tertiary sv-btn--sm" disabled={pending} onClick={() => resend(r.id)}>
+                          <Icon name="send" size={14} />
+                          Resend invite
+                        </button>
+                      )}
                       <button className="sv-btn sv-btn--tertiary sv-btn--sm" onClick={() => setDrawer({ open: true, row: r })}>
                         <Icon name="pencil" size={14} />
                         Edit

@@ -4,9 +4,18 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@/generated/prisma/client";
 import { logActivity } from "@/lib/activity";
+import { inviteEmail, sendMail } from "@/lib/mail";
+import { appOrigin } from "@/lib/origin";
 import { prisma } from "@/lib/prisma";
 import { SCHEMA, type EntityKey, type FormValues } from "@/lib/schema";
 import { authorize, type ActionResult } from "@/lib/session";
+
+/** Emails the invited member a link to set up their account. */
+async function sendInviteEmail(name: string, email: string, role: string, token: string, inviterName: string): Promise<void> {
+  const org = await prisma.organization.findFirst({ orderBy: { id: "asc" } });
+  const link = `${await appOrigin()}/sign-up/${token}`;
+  await sendMail({ to: email, toName: name, ...inviteEmail(name, org?.name ?? "PayBridge Systems", inviterName, role, link) });
+}
 
 /** The most human-readable field a record has, for the activity log. */
 function labelFor(data: Record<string, unknown>): string {
@@ -92,6 +101,38 @@ export async function saveRecord(entity: EntityKey, editingId: number | null, va
 
   await logActivity(entity, editingId ? "updated" : "created", labelFor(data), auth.name);
   revalidatePath("/", "layout");
+
+  if (entity === "team" && !editingId) {
+    try {
+      await sendInviteEmail(data.name as string, data.email as string, data.role as string, data.inviteToken as string, auth.name);
+    } catch (e) {
+      console.error(e);
+      return { ok: false, error: `Added, but we couldn't send the invite email — use "Resend invite" to try again` };
+    }
+  }
+
+  return { ok: true };
+}
+
+/** Regenerates the invite link (burning the old one) and re-sends it. */
+export async function resendInvite(id: number): Promise<ActionResult> {
+  const auth = await authorize(SCHEMA.team.area);
+  if ("ok" in auth) return auth;
+
+  const member = await prisma.teamMember.findUnique({ where: { id } });
+  if (!member || member.status !== "Invited") return { ok: false, error: "This member isn't waiting on an invite" };
+
+  const inviteToken = randomBytes(24).toString("hex");
+  await prisma.teamMember.update({ where: { id }, data: { inviteToken } });
+
+  try {
+    await sendInviteEmail(member.name, member.email, member.role, inviteToken, auth.name);
+  } catch (e) {
+    console.error(e);
+    return { ok: false, error: "We couldn't send the invite email right now — try again in a minute" };
+  }
+
+  await logActivity("team", "resent invite to", member.name, auth.name);
   return { ok: true };
 }
 

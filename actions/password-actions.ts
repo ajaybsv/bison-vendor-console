@@ -1,8 +1,8 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-import { headers } from "next/headers";
 import { passwordResetEmail, sendMail } from "@/lib/mail";
+import { appOrigin } from "@/lib/origin";
 import { hashPassword } from "@/lib/password";
 import { findValidReset, hashResetToken } from "@/lib/password-reset";
 import { prisma } from "@/lib/prisma";
@@ -10,13 +10,6 @@ import { createSession, type ActionResult } from "@/lib/session";
 
 const RESET_MINUTES = 60;
 const RESEND_COOLDOWN_MS = 60_000;
-
-async function appOrigin(): Promise<string> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
-}
 
 /** Always reports success, so the form never reveals which emails have accounts. */
 export async function requestPasswordReset(email: string): Promise<ActionResult> {

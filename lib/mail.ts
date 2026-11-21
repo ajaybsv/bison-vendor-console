@@ -44,3 +44,17 @@ export function passwordResetEmail(name: string, link: string): Omit<Mail, "to" 
 </div>`,
   };
 }
+
+export function inviteEmail(name: string, orgName: string, inviterName: string, role: string, link: string): Omit<Mail, "to" | "toName"> {
+  return {
+    subject: `You're invited to join ${orgName} on BISON`,
+    text: `Hi ${name},\n\n${inviterName} has invited you to join ${orgName} on BISON as a ${role}. Use this link to set up your account:\n${link}\n\nIf you weren't expecting this invite, you can ignore this email.`,
+    html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:22px;color:#0d1b2e;max-width:520px">
+  <p style="font-size:20px;font-weight:600;color:#2455F5;margin:0 0 20px">BISON</p>
+  <p>Hi ${escape(name)},</p>
+  <p>${escape(inviterName)} has invited you to join ${escape(orgName)} on BISON as a <b>${escape(role)}</b>. Click below to set up your account.</p>
+  <p style="margin:24px 0"><a href="${escape(link)}" style="background:#2455F5;color:#ffffff;text-decoration:none;font-weight:600;padding:10px 16px;border-radius:8px;display:inline-block">Register your account</a></p>
+  <p style="color:#455670;font-size:13px">If you weren't expecting this invite, you can ignore this email.</p>
+</div>`,
+  };
+}

@@ -14,7 +14,7 @@ export default async function InvitePreviewPage({ params }: PageProps<"/invite/[
   return (
     <div className="auth-card email-preview" style={{ maxWidth: 560 }}>
       <p className="sv-caption" style={{ margin: "0 0 var(--sv-space-4)" }}>
-        This is a preview of what the invite email looks like — BISON doesn&apos;t send real email yet.
+        This is a preview of the invite email already sent to {inv.email}.
       </p>
       <div style={{ border: "1px solid var(--sv-border)", borderRadius: "var(--sv-radius-md)", padding: "var(--sv-space-5)" }}>
         <div className="em-row">
