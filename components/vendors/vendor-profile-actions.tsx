@@ -6,7 +6,9 @@ import { EntityFormDrawer } from "@/components/entity/entity-form-drawer";
 import { Icon } from "@/components/ui/icon";
 import { SendRequestDrawer, type SendTarget } from "@/components/vendors/send-request-drawer";
 import { SCHEMA } from "@/lib/schema";
+import type { Tier } from "@/lib/tiering";
 import type { Vendor } from "@/lib/types";
+import { recommendedDomains } from "@/lib/vendor-evaluation";
 
 export function VendorProfileActions({
   tenant,
@@ -15,6 +17,7 @@ export function VendorProfileActions({
   teamNames,
   questionCounts,
   today,
+  tier,
 }: {
   tenant: string;
   vendor: Vendor;
@@ -22,6 +25,7 @@ export function VendorProfileActions({
   teamNames: string[];
   questionCounts: Record<string, number>;
   today: string;
+  tier: Tier;
 }) {
   const [editing, setEditing] = useState(false);
   const [sendTarget, setSendTarget] = useState<SendTarget | null>(null);
@@ -36,7 +40,9 @@ export function VendorProfileActions({
       {canSend ? (
         <button
           className="sv-btn sv-btn--primary sv-btn--sm"
-          onClick={() => setSendTarget({ vendor: { id: vendor.id, name: vendor.name, contact: vendor.contact }, latest })}
+          onClick={() =>
+            setSendTarget({ vendor: { id: vendor.id, name: vendor.name, contact: vendor.contact }, latest, recommended: recommendedDomains(vendor, tier) })
+          }
         >
           <Icon name="send" size={14} />
           {latest ? "Start reassessment" : "Build & send"}

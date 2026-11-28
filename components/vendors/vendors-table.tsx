@@ -18,12 +18,13 @@ import { fmtDate, fmtInr } from "@/lib/format";
 import { calculateMateriality } from "@/lib/materiality";
 import { SCHEMA } from "@/lib/schema";
 import { isInFlight, latestRequestFor, reviewState, vendorStatus } from "@/lib/status";
-import { calculateTier, tierConfigFromOrg } from "@/lib/tiering";
+import { calculateTier, tierConfigFromOrg, type Tier } from "@/lib/tiering";
 import type { Organization, Vendor, VendorRequest } from "@/lib/types";
+import { recommendedDomains } from "@/lib/vendor-evaluation";
 
-export function sendTargetFor(v: Vendor, cycles: VendorRequest[]): SendTarget {
+export function sendTargetFor(v: Vendor, cycles: VendorRequest[], tier: Tier): SendTarget {
   const latest = latestRequestFor(cycles, v.id);
-  return { vendor: { id: v.id, name: v.name, contact: v.contact }, latest };
+  return { vendor: { id: v.id, name: v.name, contact: v.contact }, latest, recommended: recommendedDomains(v, tier) };
 }
 
 export function VendorsTable({
@@ -52,7 +53,10 @@ export function VendorsTable({
   const [deleting, setDeleting] = useState<Vendor | null>(null);
   const [sendTarget, setSendTarget] = useState<SendTarget | null>(() => {
     const v = vendors.find((x) => x.id === initialSendId);
-    return v ? sendTargetFor(v, cycles) : null;
+    if (!v) return null;
+    const hasConcentration = concentrationsFor(v.id, findConcentrations(vendors)).length > 0;
+    const { tier } = calculateTier(v, hasConcentration, tierConfigFromOrg(org ?? {}));
+    return sendTargetFor(v, cycles, tier);
   });
   const [pending, startTransition] = useTransition();
 
@@ -183,7 +187,7 @@ export function VendorsTable({
                             View request
                           </Link>
                         ) : (
-                          <button className="sv-btn sv-btn--secondary sv-btn--sm" onClick={() => setSendTarget(sendTargetFor(v, cycles))}>
+                          <button className="sv-btn sv-btn--secondary sv-btn--sm" onClick={() => setSendTarget(sendTargetFor(v, cycles, tier))}>
                             <Icon name="send" size={14} />
                             {latest ? "Reassess" : "Build & send"}
                           </button>

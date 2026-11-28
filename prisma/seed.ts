@@ -21,6 +21,75 @@ const QUESTIONS = [
   { id: "q10", control: "Concentration Monitoring", text: "What percentage of PayBridge's total annual revenue does this client relationship represent?", type: "text", options: [], inTrustPack: false, defaultValue: null, sourceAnswerId: null },
 ];
 
+/** Service Provider Evaluation (6A) — the IT & security due-diligence bank we ask our own
+ * vendors, straight from the blueprint's master question bank (sheet 6A). Dynamically scoped
+ * per vendor by lib/vendor-evaluation.ts — not every vendor gets every domain. */
+const YN = ["Yes", "No"];
+const VENDOR_EVAL_QUESTIONS = [
+  // 1. Organisation & Security Governance
+  { id: "GOV-01", control: "1. Organisation & Security Governance", text: "Does the service provider maintain documented information security policies appropriate to the services being provided?", type: "choice", options: YN, why: "Establishes whether security governance is formally defined.", evidenceHint: "Information security policy" },
+  { id: "GOV-02", control: "1. Organisation & Security Governance", text: "Is responsibility for information security assigned to an appropriate individual or team?", type: "choice", options: YN, why: "Confirms ownership and accountability for security.", evidenceHint: "Organisation chart / responsibility statement" },
+  { id: "GOV-03", control: "1. Organisation & Security Governance", text: "Does the provider perform periodic information security or technology risk assessments?", type: "choice", options: YN, why: "Helps determine whether the provider identifies and manages its own risks.", evidenceHint: "Risk assessment summary" },
+  { id: "GOV-04", control: "1. Organisation & Security Governance", text: "Does the provider have a process for managing changes that could materially affect the service or security?", type: "choice", options: YN, why: "Uncontrolled changes can introduce outages or security weaknesses.", evidenceHint: "Change management process" },
+  // 2. Information & Cyber Security
+  { id: "SEC-01", control: "2. Information & Cyber Security", text: "Does the provider maintain baseline security controls appropriate to the service and associated risks?", type: "choice", options: YN, why: "Provides an overall view of the provider's security control environment.", evidenceHint: "Security policy / assurance report" },
+  { id: "SEC-02", control: "2. Information & Cyber Security", text: "Are security events and significant incidents detected, investigated and managed through a defined process?", type: "choice", options: YN, why: "Supports incident readiness and timely response.", evidenceHint: "Incident response procedure" },
+  { id: "SEC-03", control: "2. Information & Cyber Security", text: "Does the provider monitor relevant systems and security events?", type: "choice", options: YN, why: "Supports detection of suspicious activity and operational issues.", evidenceHint: "Monitoring/logging overview" },
+  { id: "SEC-04", control: "2. Information & Cyber Security", text: "Does the provider have a process to notify the organisation of security incidents that may affect the outsourced service or data?", type: "choice", options: YN, why: "Supports contractual incident escalation and oversight.", evidenceHint: "Incident notification commitment" },
+  // 3. Data Protection & Privacy
+  { id: "DATA-01", control: "3. Data Protection & Privacy", text: "Will the provider receive, access, view, process, store, transmit or otherwise handle organisational, customer or personal information?", type: "choice", options: YN, why: "Confirms the actual data handling role of the provider.", evidenceHint: "Data flow / service description" },
+  { id: "DATA-02", control: "3. Data Protection & Privacy", text: "What categories of information will be handled as part of the service?", type: "text", options: [], why: "Helps determine the sensitivity and applicable assessment depth.", evidenceHint: "Data inventory / data flow" },
+  { id: "DATA-03", control: "3. Data Protection & Privacy", text: "Is data protected during transmission using appropriate security measures?", type: "choice", options: YN, why: "Addresses confidentiality and integrity while data moves between systems.", evidenceHint: "Architecture / encryption details" },
+  { id: "DATA-04", control: "3. Data Protection & Privacy", text: "Is stored information protected using appropriate security measures?", type: "choice", options: YN, why: "Addresses protection of information held by the provider.", evidenceHint: "Security architecture / encryption details" },
+  { id: "DATA-05", control: "3. Data Protection & Privacy", text: "Can the provider identify and appropriately segregate the organisation's information from that of other customers?", type: "choice", options: YN, why: "Important for shared, SaaS and multi-tenant environments.", evidenceHint: "Data segregation architecture" },
+  { id: "DATA-06", control: "3. Data Protection & Privacy", text: "Is there a defined process for returning, transferring or securely deleting information at the end of the service?", type: "choice", options: YN, why: "Supports exit planning and safe data handling.", evidenceHint: "Data return/deletion procedure" },
+  // 4. Identity & Access Management
+  { id: "IAM-01", control: "4. Identity & Access Management", text: "Are access rights granted based on defined roles and business/service requirements?", type: "choice", options: YN, why: "Helps assess whether access is controlled according to need.", evidenceHint: "Access control policy" },
+  { id: "IAM-02", control: "4. Identity & Access Management", text: "Are privileged or administrative access rights subject to additional controls?", type: "choice", options: YN, why: "Privileged access can significantly increase impact if compromised.", evidenceHint: "Privileged access process" },
+  { id: "IAM-03", control: "4. Identity & Access Management", text: "Is access reviewed or removed when it is no longer required?", type: "choice", options: YN, why: "Reduces risk from unnecessary or outdated access.", evidenceHint: "Access review/offboarding process" },
+  { id: "IAM-04", control: "4. Identity & Access Management", text: "Are authentication controls appropriate to the sensitivity of the service and access?", type: "choice", options: YN, why: "Supports protection against unauthorised access.", evidenceHint: "Authentication approach" },
+  // 5. Infrastructure & Operations Security
+  { id: "OPS-01", control: "5. Infrastructure & Operations Security", text: "Does the provider maintain appropriate processes to operate and maintain the infrastructure supporting the service?", type: "choice", options: YN, why: "Assesses operational stability and service reliability.", evidenceHint: "Operations overview" },
+  { id: "OPS-02", control: "5. Infrastructure & Operations Security", text: "Are important systems and infrastructure components maintained and supported?", type: "choice", options: YN, why: "Unsupported components can create security and resilience risks.", evidenceHint: "Asset/support lifecycle evidence" },
+  { id: "OPS-03", control: "5. Infrastructure & Operations Security", text: "Does the provider have appropriate backup arrangements for information and systems supporting the service?", type: "choice", options: YN, why: "Supports recovery from loss or disruption.", evidenceHint: "Backup policy / summary" },
+  { id: "OPS-04", control: "5. Infrastructure & Operations Security", text: "Are relevant service capacity and availability requirements monitored?", type: "choice", options: YN, why: "Helps identify potential service degradation and availability issues.", evidenceHint: "Monitoring/SLA evidence" },
+  // 6. Vulnerability & Security Testing
+  { id: "VUL-01", control: "6. Vulnerability & Security Testing", text: "Does the provider identify and manage vulnerabilities affecting systems used to deliver the service?", type: "choice", options: YN, why: "Unmanaged vulnerabilities may expose the organisation or its data.", evidenceHint: "Vulnerability management process" },
+  { id: "VUL-02", control: "6. Vulnerability & Security Testing", text: "Are security patches and fixes managed through a defined process?", type: "choice", options: YN, why: "Supports timely remediation of known weaknesses.", evidenceHint: "Patch management process" },
+  { id: "VUL-03", control: "6. Vulnerability & Security Testing", text: "Does the provider perform security testing appropriate to the nature of the service?", type: "choice", options: YN, why: "Provides assurance that significant weaknesses are identified.", evidenceHint: "VA/PT or testing summary" },
+  // 7. Application & Secure Development
+  { id: "APP-01", control: "7. Application & Secure Development", text: "Does the provider follow a defined process for developing and changing applications that support the service?", type: "choice", options: YN, why: "Assesses whether application changes are managed systematically.", evidenceHint: "SDLC/change process" },
+  { id: "APP-02", control: "7. Application & Secure Development", text: "Are security considerations incorporated into application development and testing?", type: "choice", options: YN, why: "Helps reduce security weaknesses introduced during development.", evidenceHint: "Secure development practices" },
+  { id: "APP-03", control: "7. Application & Secure Development", text: "Are application security issues identified and tracked through remediation?", type: "choice", options: YN, why: "Ensures discovered weaknesses are not ignored.", evidenceHint: "Security issue process" },
+  // 8. Cloud & Shared Service Security
+  { id: "CLD-01", control: "8. Cloud & Shared Service Security", text: "What cloud or hosting environment supports the service?", type: "text", options: [], why: "Helps understand hosting and infrastructure dependencies.", evidenceHint: "Architecture overview" },
+  { id: "CLD-02", control: "8. Cloud & Shared Service Security", text: "Where are the primary service and relevant data hosted?", type: "text", options: [], why: "Supports data location, jurisdiction and resilience assessment.", evidenceHint: "Data centre/cloud region details" },
+  { id: "CLD-03", control: "8. Cloud & Shared Service Security", text: "How is separation between different customers or tenants maintained?", type: "text", options: [], why: "Multi-tenant weaknesses may expose one customer's information to another.", evidenceHint: "Tenant segregation design" },
+  { id: "CLD-04", control: "8. Cloud & Shared Service Security", text: "Are significant cloud or infrastructure subcontractors disclosed where relevant?", type: "choice", options: YN, why: "Supports supply-chain and concentration risk assessment.", evidenceHint: "Subprocessor/subcontractor list" },
+  // 9. Incident Management & Notification
+  { id: "INC-01", control: "9. Incident Management & Notification", text: "Does the provider maintain a documented incident management or response process?", type: "choice", options: YN, why: "Assesses preparedness to manage security and service incidents.", evidenceHint: "Incident response procedure" },
+  { id: "INC-02", control: "9. Incident Management & Notification", text: "Can the provider support investigation and provide relevant information following an incident affecting the service?", type: "choice", options: YN, why: "Supports effective oversight and response by the organisation.", evidenceHint: "Contractual/process commitment" },
+  { id: "INC-03", control: "9. Incident Management & Notification", text: "Are incident notification timelines and escalation contacts defined?", type: "choice", options: YN, why: "Supports timely communication during significant events.", evidenceHint: "Notification matrix / SLA" },
+  // 10. BCP & Disaster Recovery
+  { id: "BCP-01", control: "10. BCP & Disaster Recovery", text: "Does the provider maintain business continuity arrangements relevant to the service?", type: "choice", options: YN, why: "Assesses preparedness for business disruption.", evidenceHint: "BCP summary" },
+  { id: "BCP-02", control: "10. BCP & Disaster Recovery", text: "Does the provider maintain disaster recovery arrangements for technology supporting the service?", type: "choice", options: YN, why: "Assesses ability to recover technology after major disruption.", evidenceHint: "DR plan / summary" },
+  { id: "BCP-03", control: "10. BCP & Disaster Recovery", text: "Are BCP/DR arrangements tested periodically?", type: "choice", options: YN, why: "Plans provide greater assurance when tested.", evidenceHint: "Test summary/results" },
+  { id: "BCP-04", control: "10. BCP & Disaster Recovery", text: "What recovery commitments or targets apply to the outsourced service, where applicable?", type: "text", options: [], why: "Supports alignment with organisational resilience requirements.", evidenceHint: "SLA / RTO/RPO information" },
+  // 11. Subcontractor & Fourth-Party Management
+  { id: "TPRM-01", control: "11. Subcontractor & Fourth-Party Management", text: "Does the provider use subcontractors or other key entities to deliver the service?", type: "choice", options: YN, why: "Identifies supply-chain exposure.", evidenceHint: "Subcontractor list" },
+  { id: "TPRM-02", control: "11. Subcontractor & Fourth-Party Management", text: "Does the provider perform appropriate oversight of relevant subcontractors?", type: "choice", options: YN, why: "Weak subcontractor management can transfer risk downstream.", evidenceHint: "Third-party management process" },
+  { id: "TPRM-03", control: "11. Subcontractor & Fourth-Party Management", text: "Can the provider notify the organisation of material changes involving key subcontractors?", type: "choice", options: YN, why: "Supports ongoing dependency and risk monitoring.", evidenceHint: "Notification commitment" },
+  // 12. Compliance, Assurance & Audit
+  { id: "ASSR-01", control: "12. Compliance, Assurance & Audit", text: "Does the provider hold relevant independent certifications, assurance reports or assessments?", type: "choice", options: YN, why: "Third-party assurance can support the due diligence process.", evidenceHint: "ISO/SOC/other assurance evidence" },
+  { id: "ASSR-02", control: "12. Compliance, Assurance & Audit", text: "Can the provider provide relevant assurance evidence for review?", type: "choice", options: YN, why: "Supports evidence-based due diligence.", evidenceHint: "Current reports/certificates" },
+  { id: "ASSR-03", control: "12. Compliance, Assurance & Audit", text: "Are appropriate audit or oversight arrangements available for the outsourced service?", type: "choice", options: YN, why: "Supports ongoing monitoring and audit rights.", evidenceHint: "Contract/audit clause" },
+  // 13. Exit & Transition Management
+  { id: "EXIT-01", control: "13. Exit & Transition Management", text: "Is there a practical approach to support transition of the service if the arrangement ends?", type: "choice", options: YN, why: "Supports continuity during vendor replacement or termination.", evidenceHint: "Exit/transition approach" },
+  { id: "EXIT-02", control: "13. Exit & Transition Management", text: "Can the organisation retrieve relevant data in an agreed format during or at the end of the arrangement?", type: "choice", options: YN, why: "Reduces data portability and lock-in risk.", evidenceHint: "Data export commitment" },
+  { id: "EXIT-03", control: "13. Exit & Transition Management", text: "Can the provider support secure deletion or destruction of organisational data and records when required?", type: "choice", options: YN, why: "Supports safe closure and contractual obligations.", evidenceHint: "Deletion/destruction process" },
+  { id: "EXIT-04", control: "13. Exit & Transition Management", text: "Will the provider cooperate with the organisation and, where applicable, a replacement provider during transition?", type: "choice", options: YN, why: "Supports smooth transition and reduces operational disruption.", evidenceHint: "Contractual commitment" },
+];
+
 async function main() {
   // Fixed ids are referenced across tables (sourceAnswerId, vendorId), so restart sequences too.
   await prisma.$executeRawUnsafe(
@@ -52,7 +121,12 @@ async function main() {
     ],
   });
 
-  await prisma.question.createMany({ data: QUESTIONS.map((q, position) => ({ ...q, position })) });
+  await prisma.question.createMany({
+    data: [
+      ...QUESTIONS.map((q, position) => ({ ...q, position, audience: "client" })),
+      ...VENDOR_EVAL_QUESTIONS.map((q, i) => ({ ...q, position: QUESTIONS.length + i, audience: "vendor" })),
+    ],
+  });
 
   const requests = [
     { client: "HDFC Bank", kind: "Annual reassessment", frameworks: ["RBI", "ISO 27001", "DPDP"], due: "2026-09-18", contact: "Priya N. · Risk & Compliance", qDone: 30, qTotal: 34, evDone: 4, evTotal: 6, status: "In progress", reqEvidence: ["ISO Certificate", "SOC Report", "VAPT Report", "Financial Statements", "Insurance Certificate", "Credit Rating"] },
@@ -124,6 +198,9 @@ async function main() {
       legalEntity: "Nimbus Cloud Infrastructure Inc.", cloudProviders: "AWS, Cloudflare", subcontractors: "Equinix Data Centers",
       internalDependencies: "Loan origination platform, mobile app backend, payment gateway API",
       alternativeProviders: "Limited", dependencyReviewStatus: "Reviewed",
+      handlesCustomerData: "Yes", dataCategories: ["Bank or payment details"], dataHandlingActions: ["Store", "Transmit"],
+      providesHostingOrSoftware: "Yes", connectsToSystems: "Yes", providesSecurityMonitoring: "No",
+      usesSubcontractor: "Yes", operatesCrossBorder: "Yes",
       disruptionToleranceHours: "4", customersAffectedPct: "60", financialImpactEstimate: "15000000",
       approvalStatus: "In review", crossFunctionalConfirmations: ["Finance / ERM", "Information Security"],
       approverSignoffs: ["Business / Relationship Owner", "CISO / Security Head"],
@@ -142,6 +219,9 @@ async function main() {
       internalDependencies: "Customer onboarding flow",
       alternativeProviders: "Available", dependencyReviewStatus: "Reviewed",
       annualSpend: "4500000",
+      handlesCustomerData: "Yes", dataCategories: ["ID / KYC documents", "Customer name / contact details"], dataHandlingActions: ["Receive", "Process", "Store"],
+      providesHostingOrSoftware: "Yes", connectsToSystems: "Yes", providesSecurityMonitoring: "No",
+      usesSubcontractor: "Yes", operatesCrossBorder: "No",
     },
   });
   // Swift Support BPO has no requests — the roster derives "Not sent" from that absence.
@@ -155,22 +235,44 @@ async function main() {
       legalEntity: "Swift Support BPO Pvt Ltd", cloudProviders: "Microsoft Azure",
       internalDependencies: "Customer support portal",
       alternativeProviders: "Available", dependencyReviewStatus: "Pending",
+      handlesCustomerData: "Yes", dataCategories: ["Customer name / contact details"], dataHandlingActions: ["Access", "View"],
+      providesHostingOrSoftware: "No", connectsToSystems: "Yes", providesSecurityMonitoring: "No",
+      usesSubcontractor: "No", operatesCrossBorder: "No",
     },
   });
 
   const answered = (value: string) => ({ value, confirmed: true });
   const pending = { value: null, confirmed: false };
+  const GOV_SEC_DATA_CLD_INC = [
+    "1. Organisation & Security Governance",
+    "2. Information & Cyber Security",
+    "3. Data Protection & Privacy",
+    "8. Cloud & Shared Service Security",
+    "9. Incident Management & Notification",
+  ];
+  const GOV_SEC_DATA_IAM = [
+    "1. Organisation & Security Governance",
+    "2. Information & Cyber Security",
+    "3. Data Protection & Privacy",
+    "4. Identity & Access Management",
+  ];
   const vendorRequests = [
     {
       vendor: nimbus, status: "In progress", cadence: "Annually (12 months)",
-      controlsSent: ["Vendor Due Diligence", "Security Safeguards"], qDone: 5, qTotal: 8, sentOn: "2026-08-15", due: "2026-09-30", completedOn: null,
+      controlsSent: GOV_SEC_DATA_CLD_INC, qDone: 9, qTotal: 21, sentOn: "2026-08-15", due: "2026-09-30", completedOn: null,
       responses: {
-        q1: answered("Yes — audited annually by KPMG US; SOC 1 Type II report available."),
-        q2: answered("Yes — S&P BBB+ (reaffirmed Jan 2026)."),
-        q3: answered("Formal offboarding runbook: full data export within 15 days of termination, followed by cryptographic erasure and a signed destruction certificate."),
-        q4: answered("Yes — all subprocessors listed in our public Subprocessor Directory, updated quarterly."),
-        q5: answered("Yes — SOC 2 Type II (available under NDA) and ISO 27001:2022 certified."),
-        q6: pending, q7: pending, q9: pending,
+        "GOV-01": answered("Yes — Information Security Policy v4, reviewed annually by the board."),
+        "GOV-02": answered("Yes — CISO owns security governance; responsibility documented in the org chart."),
+        "SEC-01": answered("Yes — SOC 2 Type II (available under NDA) and ISO 27001:2022 certified."),
+        "SEC-02": answered("Yes — documented incident response procedure, tested biannually."),
+        "DATA-01": answered("Yes — hosts and processes payment card data for the loan origination platform."),
+        "DATA-03": answered("Yes — TLS 1.2+ enforced for all data in transit."),
+        "DATA-04": answered("Yes — AES-256 at rest across every environment."),
+        "CLD-01": answered("Multi-region AWS with Cloudflare at the edge for CDN/DDoS protection."),
+        "CLD-02": answered("Primary region: us-east-1 (Virginia); DR region: us-west-2 (Oregon)."),
+        "GOV-03": pending, "GOV-04": pending, "SEC-03": pending, "SEC-04": pending,
+        "DATA-02": pending, "DATA-05": pending, "DATA-06": pending, "CLD-03": pending, "CLD-04": pending,
+        "INC-01": pending, "INC-02": pending, "INC-03": pending,
       },
       evidenceRequested: ["ISO Certificate", "SOC Report", "VAPT Report"], evDone: 2, evTotal: 3,
       evidence: [
@@ -181,16 +283,26 @@ async function main() {
     },
     {
       vendor: verify, status: "Completed", cadence: "Every 6 months",
-      controlsSent: ["Vendor Due Diligence", "Security Safeguards"], qDone: 8, qTotal: 8, sentOn: "2025-10-15", due: "2025-12-15", completedOn: "2025-12-15",
+      controlsSent: GOV_SEC_DATA_IAM, qDone: 18, qTotal: 18, sentOn: "2025-10-15", due: "2025-12-15", completedOn: "2025-12-15",
       responses: {
-        q1: answered("Yes — audited annually by Grant Thornton India; FY24-25 report on file."),
-        q2: answered("Yes — ICRA A (reaffirmed Sep 2025)."),
-        q3: answered("Documented data retention and deletion policy: KYC records purged 90 days post-offboarding per RBI guidelines."),
-        q4: answered("Yes — sub-processors (OCR vendor, SMS gateway) disclosed."),
-        q5: answered("Yes — ISO 27001:2013 certified (transition to the 2022 revision in progress)."),
-        q6: answered("Yes — annual VAPT by an empanelled auditor."),
-        q7: answered("Yes — AES-256 at rest, TLS 1.2 in transit."),
-        q9: answered("Yes — committed to notify within 48 hours of a confirmed breach."),
+        "GOV-01": answered("Yes — Information Security Policy, reviewed annually."),
+        "GOV-02": answered("Yes — Head of InfoSec owns security governance."),
+        "GOV-03": answered("Yes — annual technology risk assessment performed internally."),
+        "GOV-04": answered("Yes — formal change advisory board for any change affecting production KYC systems."),
+        "SEC-01": answered("Yes — ISO 27001:2013 certified (transition to the 2022 revision in progress)."),
+        "SEC-02": answered("Yes — documented incident management process, with a dedicated response team."),
+        "SEC-03": answered("Yes — 24x7 SIEM monitoring across all production systems."),
+        "SEC-04": answered("Yes — committed to notify within 48 hours of a confirmed breach."),
+        "DATA-01": answered("Yes — receives and processes KYC documents and identity data for customer onboarding."),
+        "DATA-02": answered("ID/KYC documents, customer name and contact details, biometric templates."),
+        "DATA-03": answered("Yes — TLS 1.2 enforced in transit."),
+        "DATA-04": answered("Yes — AES-256 at rest; biometric templates additionally tokenized."),
+        "DATA-05": answered("Yes — logical tenant segregation enforced at the database and storage layer."),
+        "DATA-06": answered("Documented data retention and deletion policy: KYC records purged 90 days post-offboarding per RBI guidelines."),
+        "IAM-01": answered("Yes — role-based access control aligned to job function."),
+        "IAM-02": answered("Yes — privileged access requires MFA and is time-bound."),
+        "IAM-03": answered("Yes — quarterly access recertification; access revoked on offboarding."),
+        "IAM-04": answered("Yes — MFA enforced for all access to production and customer data."),
       },
       evidenceRequested: ["ISO Certificate", "SOC Report"], evDone: 2, evTotal: 2,
       evidence: [
@@ -200,18 +312,37 @@ async function main() {
     },
     {
       vendor: verify, status: "Completed", cadence: "Every 6 months",
-      controlsSent: ["Vendor Due Diligence", "Security Safeguards", "Concentration Monitoring"], qDone: 10, qTotal: 10, sentOn: "2026-06-01", due: "2026-07-01", completedOn: "2026-06-28",
+      controlsSent: [...GOV_SEC_DATA_IAM, "8. Cloud & Shared Service Security", "11. Subcontractor & Fourth-Party Management", "12. Compliance, Assurance & Audit"],
+      qDone: 28, qTotal: 28, sentOn: "2026-06-01", due: "2026-07-01", completedOn: "2026-06-28",
       responses: {
-        q1: answered("Yes — audited annually by Grant Thornton India; latest report FY25-26."),
-        q2: answered("Yes — ICRA A+ (reaffirmed Mar 2026)."),
-        q3: answered("Documented data retention and deletion policy: KYC records purged 90 days post-offboarding per RBI guidelines, with a certificate of destruction issued."),
-        q4: answered("Yes — sub-processors (OCR vendor, SMS gateway) disclosed and reassessed annually."),
-        q5: answered("Yes — ISO 27001:2022 certified; SOC 2 Type II in progress, expected Q4 2026."),
-        q6: answered("Yes — biannual VAPT by a CERT-In empanelled auditor."),
-        q7: answered("Yes — AES-256 at rest, TLS 1.3 in transit; biometric templates additionally tokenized."),
-        q9: answered("Yes — contractually committed to notify within 24 hours, ahead of the 72-hour requirement."),
-        q8: answered("No — OCR and liveness-detection vendors are dual-sourced."),
-        q10: answered("Approximately 8% of VerifyChain's total annual revenue."),
+        "GOV-01": answered("Yes — Information Security Policy, reviewed annually."),
+        "GOV-02": answered("Yes — Head of InfoSec owns security governance."),
+        "GOV-03": answered("Yes — annual technology risk assessment performed internally."),
+        "GOV-04": answered("Yes — formal change advisory board for production changes."),
+        "SEC-01": answered("Yes — ISO 27001:2022 certified; SOC 2 Type II in progress, expected Q4 2026."),
+        "SEC-02": answered("Yes — documented incident management process with a dedicated response team."),
+        "SEC-03": answered("Yes — 24x7 SIEM monitoring across all production systems."),
+        "SEC-04": answered("Yes — contractually committed to notify within 24 hours, ahead of the 72-hour requirement."),
+        "DATA-01": answered("Yes — receives and processes KYC documents and identity data for customer onboarding."),
+        "DATA-02": answered("ID/KYC documents, customer name and contact details, biometric templates."),
+        "DATA-03": answered("Yes — TLS 1.3 in transit."),
+        "DATA-04": answered("Yes — AES-256 at rest; biometric templates additionally tokenized."),
+        "DATA-05": answered("Yes — logical tenant segregation enforced at the database and storage layer."),
+        "DATA-06": answered("Documented data retention and deletion policy, with a certificate of destruction issued."),
+        "IAM-01": answered("Yes — role-based access control aligned to job function."),
+        "IAM-02": answered("Yes — privileged access requires MFA and is time-bound."),
+        "IAM-03": answered("Yes — quarterly access recertification; access revoked on offboarding."),
+        "IAM-04": answered("Yes — MFA enforced for all access to production and customer data."),
+        "CLD-01": answered("Single-region AWS deployment (ap-south-1) behind a managed API gateway."),
+        "CLD-02": answered("Primary region: ap-south-1 (Mumbai); backups replicated to ap-south-2 (Hyderabad)."),
+        "CLD-03": answered("Yes — dedicated VPC per customer tier with logical data segregation."),
+        "CLD-04": answered("Yes — OCR vendor and SMS gateway disclosed as cloud/infrastructure subcontractors."),
+        "TPRM-01": answered("Yes — OCR vendor and SMS gateway support document processing and notifications."),
+        "TPRM-02": answered("Yes — subcontractors reassessed annually against the same due-diligence bar."),
+        "TPRM-03": answered("Yes — contractually required to notify of material subcontractor changes."),
+        "ASSR-01": answered("Yes — ISO 27001:2022 certified; SOC 2 Type II report expected Q4 2026."),
+        "ASSR-02": answered("Yes — current certificates and audit summary provided under NDA."),
+        "ASSR-03": answered("Yes — annual third-party audit rights included in the master services agreement."),
       },
       evidenceRequested: ["ISO Certificate", "VAPT Report", "Insurance Certificate"], evDone: 3, evTotal: 3,
       evidence: [

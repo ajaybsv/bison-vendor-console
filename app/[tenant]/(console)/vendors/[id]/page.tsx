@@ -134,6 +134,7 @@ export default async function VendorProfilePage({ params }: PageProps<"/[tenant]
             teamNames={team.map((t) => t.name)}
             questionCounts={questionCounts}
             today={today}
+            tier={tierResult.tier}
           />
         </div>
         <div className="col sv-card" style={{ flex: 1, minWidth: 340 }}>

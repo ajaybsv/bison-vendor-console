@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { Badge, Chips, ProgressBar, StatusChip } from "@/components/ui/badges";
 import { Icon } from "@/components/ui/icon";
 import { ReminderButton } from "@/components/sent-requests/reminder-button";
-import { getVendor, getVendorRequest, listQuestions } from "@/lib/data";
+import { ResponseForm } from "@/components/sent-requests/response-form";
+import { getVendor, getVendorRequest, listVendorEvalQuestions } from "@/lib/data";
 import { requireUser } from "@/lib/session";
 import { fmtDate } from "@/lib/format";
 
@@ -14,7 +15,7 @@ export default async function SentRequestDetailPage({ params }: PageProps<"/[ten
   const { db } = await requireUser(tenant);
   const r = await getVendorRequest(db, Number(id));
   if (!r) notFound();
-  const [v, questions] = await Promise.all([getVendor(db, r.vendorId), listQuestions(db)]);
+  const [v, questions] = await Promise.all([getVendor(db, r.vendorId), listVendorEvalQuestions(db)]);
   const qPct = r.qTotal ? Math.round((r.qDone / r.qTotal) * 100) : 0;
   const evPct = r.evTotal ? Math.round((r.evDone / r.evTotal) * 100) : 0;
   const asked = questions.filter((q) => r.controlsSent.includes(q.control));
@@ -89,14 +90,19 @@ export default async function SentRequestDetailPage({ params }: PageProps<"/[ten
                 )}
               </div>
               <div style={{ fontWeight: 600 }}>{q.text}</div>
+              {q.why && <div className="sv-caption">Why this matters: {q.why}</div>}
+              {q.evidenceHint && <div className="sv-caption">Suggested evidence: {q.evidenceHint}</div>}
               {resp?.confirmed ? (
                 <div className="sv-field__input" style={{ height: "auto", padding: "var(--sv-space-3)", background: "var(--sv-surface-raised)" }}>
                   {resp.value}
                 </div>
               ) : (
-                <div className="sv-dropzone" style={{ justifyContent: "flex-start", padding: "var(--sv-space-3)" }}>
-                  Not yet answered
-                </div>
+                <>
+                  <div className="sv-dropzone" style={{ justifyContent: "flex-start", padding: "var(--sv-space-3)" }}>
+                    Not yet answered
+                  </div>
+                  <ResponseForm requestId={r.id} question={q} locked={r.status === "Completed"} />
+                </>
               )}
             </div>
           );

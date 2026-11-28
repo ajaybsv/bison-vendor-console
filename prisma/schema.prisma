@@ -165,6 +165,12 @@ model Question {
   inTrustPack    Boolean  @default(false)
   defaultValue   String?
   sourceAnswerId Int?
+  // ---- Service Provider Evaluation (6A) ---- `audience` separates this shared bank into
+  // "client" (what our own clients ask PayBridge — unchanged) and "vendor" (the sheet 6A
+  // due-diligence question bank we ask our own vendors, dynamically scoped by domain). ----
+  audience     String  @default("client")
+  why          String?
+  evidenceHint String?
 
   @@map("questions")
 }

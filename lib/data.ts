@@ -44,7 +44,12 @@ export function listEvidence(db: TenantDb) {
 }
 
 export function listQuestions(db: TenantDb) {
-  return db.question.findMany({ orderBy: { position: "asc" } });
+  return db.question.findMany({ where: { audience: "client" }, orderBy: { position: "asc" } });
+}
+
+/* ---------- Service Provider Evaluation (6A) — the bank we ask our own vendors ---------- */
+export function listVendorEvalQuestions(db: TenantDb) {
+  return db.question.findMany({ where: { audience: "vendor" }, orderBy: { position: "asc" } });
 }
 
 /* ---------- team ---------- */

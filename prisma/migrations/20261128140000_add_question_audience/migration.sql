@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "questions" ADD COLUMN IF NOT EXISTS "audience" TEXT NOT NULL DEFAULT 'client';
+ALTER TABLE "questions" ADD COLUMN IF NOT EXISTS "evidenceHint" TEXT;
+ALTER TABLE "questions" ADD COLUMN IF NOT EXISTS "why" TEXT;

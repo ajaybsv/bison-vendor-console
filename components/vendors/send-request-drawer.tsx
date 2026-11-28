@@ -3,18 +3,22 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { sendVendorRequest } from "@/actions/vendor-actions";
-import { InfoAlert } from "@/components/ui/badges";
+import { Badge, InfoAlert } from "@/components/ui/badges";
 import { Drawer } from "@/components/ui/drawer";
 import { Checkbox } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/toast/toast-provider";
-import { CONTROLS, EVI_TYPES } from "@/lib/constants";
+import { EVI_TYPES } from "@/lib/constants";
 import { addDaysISO, fmtDate } from "@/lib/format";
+import { VENDOR_EVAL_DOMAINS } from "@/lib/vendor-evaluation";
 
 export type SendTarget = {
   vendor: { id: number; name: string; contact: string };
   /** The vendor's most recent cycle, used to pre-fill scope on a reassessment. */
   latest: { sentOn: string; controlsSent: string[]; evidenceRequested: string[] } | null;
+  /** Domains the system suggests based on this vendor's registration, classification and tier —
+   * pre-checked on a new request, but TPRM can still add or remove before sending. */
+  recommended: string[];
 };
 
 export function SendRequestDrawer({
@@ -40,7 +44,7 @@ export function SendRequestDrawer({
   if (target && target !== shown) {
     setShown(target);
     const l = target.latest;
-    setControls(l?.controlsSent.length ? l.controlsSent : CONTROLS);
+    setControls(l?.controlsSent.length ? l.controlsSent : target.recommended);
     setEvidence(l?.evidenceRequested.length ? l.evidenceRequested : ["ISO Certificate", "SOC Report", "VAPT Report"]);
     setDue(addDaysISO(today, 30));
   }
@@ -89,14 +93,15 @@ export function SendRequestDrawer({
           <InfoAlert compact>
             {shown.latest
               ? `Pre-filled from their last cycle (sent ${fmtDate(shown.latest.sentOn)}). Adjust scope if it's changed since then.`
-              : `These are standard questions from BISON's control library — the same one your clients use with you. Your own Trust Pack answers are about PayBridge and won't be sent; ${shown.vendor.name} answers with their own information.`}
+              : `Domains below are suggested from ${shown.vendor.name}'s registration, classification and tier — a starting point from BISON's IT & security due-diligence question bank (sheet 6A). Add or remove domains before sending.`}
           </InfoAlert>
           <div className="sv-field">
-            <label className="sv-field__label">Controls to include</label>
+            <label className="sv-field__label">Domains to include</label>
             <div className="stack">
-              {CONTROLS.map((c) => (
+              {VENDOR_EVAL_DOMAINS.map((c) => (
                 <Checkbox key={c} checked={controls.includes(c)} onChange={(on) => toggle(controls, setControls, c, on)}>
                   {c} <span className="sv-caption">({questionCounts[c] ?? 0} questions)</span>
+                  {!shown.latest && shown.recommended.includes(c) && <Badge tone="accent">Suggested</Badge>}
                 </Checkbox>
               ))}
             </div>
