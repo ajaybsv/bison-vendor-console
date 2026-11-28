@@ -9,9 +9,11 @@ import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/toast/toast-provider";
 
 export function SignInForm({
+  tenant,
   orgName,
   invite,
 }: {
+  tenant: string;
   orgName: string;
   invite: { name: string; token: string } | null;
 }) {
@@ -24,10 +26,10 @@ export function SignInForm({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const res = await signIn(email, password);
+      const res = await signIn(tenant, email, password);
       if (!res.ok) return showToast(res.error, "danger");
       showToast("Signed in");
-      router.push("/dashboard");
+      router.push(`/${tenant}/dashboard`);
       router.refresh();
     });
   }
@@ -64,7 +66,7 @@ export function SignInForm({
         />
       </div>
       <div style={{ textAlign: "right", marginBottom: "var(--sv-space-5)" }}>
-        <Link className="sv-btn sv-btn--tertiary sv-btn--sm" style={{ padding: 0, height: "auto" }} href="/forgot-password">
+        <Link className="sv-btn sv-btn--tertiary sv-btn--sm" style={{ padding: 0, height: "auto" }} href={`/${tenant}/forgot-password`}>
           Forgot password?
         </Link>
       </div>
@@ -76,7 +78,7 @@ export function SignInForm({
           BISON is invite-only — a team owner adds you, you don&apos;t sign up on your own.
         </p>
         {invite ? (
-          <Link className="sv-btn sv-btn--secondary sv-btn--sm" href={`/invite/${invite.token}`}>
+          <Link className="sv-btn sv-btn--secondary sv-btn--sm" href={`/${tenant}/invite/${invite.token}`}>
             <Icon name="send" size={14} />
             Preview {invite.name}&apos;s invite email
           </Link>

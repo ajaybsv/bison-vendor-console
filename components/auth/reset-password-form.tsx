@@ -8,7 +8,7 @@ import { BisonLogo } from "@/components/brand/bison-logo";
 import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/toast/toast-provider";
 
-export function ResetPasswordForm({ token, email }: { token: string; email: string }) {
+export function ResetPasswordForm({ tenant, token, email }: { tenant: string; token: string; email: string }) {
   const router = useRouter();
   const { showToast } = useToast();
   const [password, setPassword] = useState("");
@@ -18,10 +18,10 @@ export function ResetPasswordForm({ token, email }: { token: string; email: stri
   function submit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const res = await resetPassword(token, password, confirm);
+      const res = await resetPassword(tenant, token, password, confirm);
       if (!res.ok) return showToast(res.error, "danger");
       showToast("Password updated");
-      router.push("/dashboard");
+      router.push(`/${tenant}/dashboard`);
       router.refresh();
     });
   }
@@ -69,7 +69,7 @@ export function ResetPasswordForm({ token, email }: { token: string; email: stri
         Update password
       </button>
       <div className="auth-foot">
-        <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href="/sign-in">
+        <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href={`/${tenant}/sign-in`}>
           <Icon name="chevronLeft" size={14} />
           Back to sign in
         </Link>

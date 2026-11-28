@@ -42,7 +42,7 @@ const NAV: { grp: string; items: NavItem[] }[] = [
   },
 ];
 
-export function Sidebar({ counts }: { counts: NavCounts }) {
+export function Sidebar({ counts, tenant }: { counts: NavCounts; tenant: string }) {
   const pathname = usePathname();
   return (
     <div className="sv-side">
@@ -50,11 +50,12 @@ export function Sidebar({ counts }: { counts: NavCounts }) {
         <div className="sv-side__group" key={g.grp}>
           <div className="sv-side__label">{g.grp}</div>
           {g.items.map((it) => {
-            const current = pathname === it.href || pathname.startsWith(it.href + "/");
+            const href = `/${tenant}${it.href}`;
+            const current = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
                 key={it.href}
-                href={it.href}
+                href={href}
                 className={`sv-side__item${current ? " is-current" : ""}`}
                 aria-current={current ? "page" : undefined}
               >

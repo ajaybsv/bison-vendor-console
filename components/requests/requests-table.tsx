@@ -9,7 +9,7 @@ import { fmtDate } from "@/lib/format";
 import { reqProgress, reqStatus } from "@/lib/status";
 import type { ClientRequest } from "@/lib/types";
 
-export function RequestsTable({ rows: all }: { rows: ClientRequest[] }) {
+export function RequestsTable({ tenant, rows: all }: { tenant: string; rows: ClientRequest[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const q = query.toLowerCase();
@@ -46,7 +46,7 @@ export function RequestsTable({ rows: all }: { rows: ClientRequest[] }) {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <ClickRow key={r.id} onActivate={() => router.push(`/requests/${r.id}`)}>
+                <ClickRow key={r.id} onActivate={() => router.push(`/${tenant}/requests/${r.id}`)}>
                   <td style={{ fontWeight: 600 }}>{r.client}</td>
                   <td className="sv-body-sm">{r.kind}</td>
                   <td>

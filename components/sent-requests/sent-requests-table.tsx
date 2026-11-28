@@ -8,7 +8,7 @@ import { PageHead } from "@/components/ui/page-head";
 import { fmtDate } from "@/lib/format";
 import type { VendorRequest } from "@/lib/types";
 
-export function SentRequestsTable({ rows: all }: { rows: VendorRequest[] }) {
+export function SentRequestsTable({ tenant, rows: all }: { tenant: string; rows: VendorRequest[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const q = query.toLowerCase();
@@ -44,7 +44,7 @@ export function SentRequestsTable({ rows: all }: { rows: VendorRequest[] }) {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <ClickRow key={r.id} onActivate={() => router.push(`/sent-requests/${r.id}`)}>
+                <ClickRow key={r.id} onActivate={() => router.push(`/${tenant}/sent-requests/${r.id}`)}>
                   <td style={{ fontWeight: 600 }}>{r.vendorName}</td>
                   <td>
                     <Chips items={r.controlsSent} />

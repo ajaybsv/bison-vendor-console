@@ -5,34 +5,36 @@ import { passwordResetEmail, sendMail } from "@/lib/mail";
 import { appOrigin } from "@/lib/origin";
 import { hashPassword } from "@/lib/password";
 import { findValidReset, hashResetToken } from "@/lib/password-reset";
-import { prisma } from "@/lib/prisma";
 import { createSession, type ActionResult } from "@/lib/session";
+import { dbForTenant } from "@/lib/tenant-db";
 
 const RESET_MINUTES = 60;
 const RESEND_COOLDOWN_MS = 60_000;
 
 /** Always reports success, so the form never reveals which emails have accounts. */
-export async function requestPasswordReset(email: string): Promise<ActionResult> {
+export async function requestPasswordReset(tenantSlug: string, email: string): Promise<ActionResult> {
   const address = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return { ok: false, error: "Enter a valid email address" };
+  const db = await dbForTenant(tenantSlug);
+  if (!db) return { ok: true };
 
-  const member = await prisma.teamMember.findUnique({ where: { email: address } });
+  const member = await db.teamMember.findUnique({ where: { email: address } });
   // Active members without a password yet (e.g. added by migration) set their first one this way.
   if (!member || member.status !== "Active") return { ok: true };
 
-  const recent = await prisma.passwordReset.findFirst({
+  const recent = await db.passwordReset.findFirst({
     where: { memberId: member.id, createdAt: { gt: new Date(Date.now() - RESEND_COOLDOWN_MS) } },
   });
   if (recent) return { ok: true };
 
   // Only the newest link is valid.
-  await prisma.passwordReset.deleteMany({ where: { memberId: member.id, usedAt: null } });
+  await db.passwordReset.deleteMany({ where: { memberId: member.id, usedAt: null } });
   const token = randomBytes(32).toString("base64url");
-  await prisma.passwordReset.create({
+  await db.passwordReset.create({
     data: { id: hashResetToken(token), memberId: member.id, expiresAt: new Date(Date.now() + RESET_MINUTES * 60_000) },
   });
 
-  const link = `${await appOrigin()}/reset-password/${token}`;
+  const link = `${await appOrigin()}/${tenantSlug}/reset-password/${token}`;
   try {
     await sendMail({ to: member.email, toName: member.name, ...passwordResetEmail(member.name, link) });
   } catch (e) {
@@ -43,18 +45,20 @@ export async function requestPasswordReset(email: string): Promise<ActionResult>
 }
 
 /** Sets the new password, burns the link, signs out every other session and signs this one in. */
-export async function resetPassword(token: string, password: string, confirm: string): Promise<ActionResult> {
+export async function resetPassword(tenantSlug: string, token: string, password: string, confirm: string): Promise<ActionResult> {
   if (!password || !confirm) return { ok: false, error: "Set a password" };
   if (password !== confirm) return { ok: false, error: "Passwords don't match" };
   if (password.length < 8) return { ok: false, error: "Use at least 8 characters" };
-  const reset = await findValidReset(token);
+  const db = await dbForTenant(tenantSlug);
+  if (!db) return { ok: false, error: "This workspace isn't available right now" };
+  const reset = await findValidReset(db, token);
   if (!reset) return { ok: false, error: "This reset link has expired or was already used" };
 
-  await prisma.$transaction([
-    prisma.teamMember.update({ where: { id: reset.memberId }, data: { passwordHash: await hashPassword(password) } }),
-    prisma.passwordReset.update({ where: { id: reset.id }, data: { usedAt: new Date() } }),
-    prisma.session.deleteMany({ where: { memberId: reset.memberId } }),
+  await db.$transaction([
+    db.teamMember.update({ where: { id: reset.memberId }, data: { passwordHash: await hashPassword(password) } }),
+    db.passwordReset.update({ where: { id: reset.id }, data: { usedAt: new Date() } }),
+    db.session.deleteMany({ where: { memberId: reset.memberId } }),
   ]);
-  await createSession(reset.memberId);
+  await createSession(tenantSlug, db, reset.memberId);
   return { ok: true };
 }

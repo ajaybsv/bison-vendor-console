@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { logActivity } from "@/lib/activity";
 import { CONTROLS, EVI_TYPES } from "@/lib/constants";
 import { todayISO } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
 import { authorize, type ActionResult } from "@/lib/session";
 
 /** Starts a new cycle for a vendor. Nothing is copied or archived — older cycles stay as
@@ -17,18 +16,19 @@ export async function sendVendorRequest(
 ): Promise<ActionResult> {
   const auth = await authorize("vendors");
   if ("ok" in auth) return auth;
+  const { db } = auth;
   const controlsSent = CONTROLS.filter((c) => controls.includes(c));
   const evidenceRequested = EVI_TYPES.filter((e) => evidenceTypes.includes(e));
   if (controlsSent.length === 0) return { ok: false, error: "Select at least one control" };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(due)) return { ok: false, error: "Pick a due date" };
 
-  const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
+  const vendor = await db.vendor.findUnique({ where: { id: vendorId } });
   if (!vendor) return { ok: false, error: "That vendor no longer exists" };
-  const latest = await prisma.vendorRequest.findFirst({ where: { vendorId }, orderBy: { sentOn: "desc" } });
+  const latest = await db.vendorRequest.findFirst({ where: { vendorId }, orderBy: { sentOn: "desc" } });
   if (latest && latest.status !== "Completed") return { ok: false, error: `${vendor.name} already has a request in progress` };
 
-  const questions = await prisma.question.findMany({ where: { control: { in: controlsSent } } });
-  await prisma.vendorRequest.create({
+  const questions = await db.question.findMany({ where: { control: { in: controlsSent } } });
+  await db.vendorRequest.create({
     data: {
       vendorId,
       vendorName: vendor.name,
@@ -44,7 +44,7 @@ export async function sendVendorRequest(
       evidence: { create: evidenceRequested.map((type) => ({ type })) },
     },
   });
-  await logActivity("vendors", "sent request", vendor.name, auth.name);
+  await logActivity(db, "vendors", "sent request", vendor.name, auth.name);
   revalidatePath("/", "layout");
   return { ok: true };
 }
@@ -53,7 +53,7 @@ export async function sendVendorRequest(
 export async function sendReminder(requestId: number): Promise<ActionResult> {
   const auth = await authorize("vendors");
   if ("ok" in auth) return auth;
-  const r = await prisma.vendorRequest.findUnique({ where: { id: requestId } });
+  const r = await auth.db.vendorRequest.findUnique({ where: { id: requestId } });
   if (!r) return { ok: false, error: "That request no longer exists" };
   if (r.status === "Completed") return { ok: false, error: "This request is already completed" };
   return { ok: true };

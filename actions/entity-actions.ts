@@ -6,14 +6,14 @@ import { Prisma } from "@/generated/prisma/client";
 import { logActivity } from "@/lib/activity";
 import { inviteEmail, sendMail } from "@/lib/mail";
 import { appOrigin } from "@/lib/origin";
-import { prisma } from "@/lib/prisma";
 import { SCHEMA, type EntityKey, type FormValues } from "@/lib/schema";
 import { authorize, type ActionResult } from "@/lib/session";
+import type { TenantDb } from "@/lib/types";
 
 /** Emails the invited member a link to set up their account. */
-async function sendInviteEmail(name: string, email: string, role: string, token: string, inviterName: string): Promise<void> {
-  const org = await prisma.organization.findFirst({ orderBy: { id: "asc" } });
-  const link = `${await appOrigin()}/sign-up/${token}`;
+async function sendInviteEmail(db: TenantDb, tenantSlug: string, name: string, email: string, role: string, token: string, inviterName: string): Promise<void> {
+  const org = await db.organization.findFirst({ orderBy: { id: "asc" } });
+  const link = `${await appOrigin()}/${tenantSlug}/sign-up/${token}`;
   await sendMail({ to: email, toName: name, ...inviteEmail(name, org?.name ?? "PayBridge Systems", inviterName, role, link) });
 }
 
@@ -38,13 +38,13 @@ function pickFields(entity: EntityKey, values: FormValues, editing: boolean): Re
   return out;
 }
 
-function delegate(entity: EntityKey) {
+function delegate(db: TenantDb, entity: EntityKey) {
   return {
-    answers: prisma.trustAnswer,
-    evidence: prisma.evidenceItem,
-    team: prisma.teamMember,
-    vendors: prisma.vendor,
-    issues: prisma.issue,
+    answers: db.trustAnswer,
+    evidence: db.evidenceItem,
+    team: db.teamMember,
+    vendors: db.vendor,
+    issues: db.issue,
   }[entity] as unknown as {
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
     update(args: { where: { id: number }; data: Record<string, unknown> }): Promise<unknown>;
@@ -57,6 +57,7 @@ export async function saveRecord(entity: EntityKey, editingId: number | null, va
   const schema = SCHEMA[entity];
   const auth = await authorize(schema.area);
   if ("ok" in auth) return auth;
+  const { db } = auth;
 
   const data: Record<string, unknown> = pickFields(entity, values, editingId != null);
   for (const f of schema.fields) {
@@ -76,12 +77,12 @@ export async function saveRecord(entity: EntityKey, editingId: number | null, va
   // audit trail for who approved what and when, rather than a generic "vendor updated".
   const priorSignoffs =
     entity === "vendors" && editingId
-      ? ((await delegate(entity).findUnique({ where: { id: editingId } }))?.approverSignoffs as string[] | undefined) ?? []
+      ? ((await delegate(db, entity).findUnique({ where: { id: editingId } }))?.approverSignoffs as string[] | undefined) ?? []
       : [];
 
   try {
-    if (editingId) await delegate(entity).update({ where: { id: editingId }, data });
-    else await delegate(entity).create({ data });
+    if (editingId) await delegate(db, entity).update({ where: { id: editingId }, data });
+    else await delegate(db, entity).create({ data });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       return { ok: false, error: "Someone with that email is already on the team" };
@@ -92,19 +93,19 @@ export async function saveRecord(entity: EntityKey, editingId: number | null, va
   if (entity === "vendors") {
     const newSignoffs = (data.approverSignoffs as string[] | undefined) ?? [];
     for (const role of newSignoffs.filter((r) => !priorSignoffs.includes(r))) {
-      await logActivity("vendors", `approved as ${role}`, labelFor(data), auth.name);
+      await logActivity(db, "vendors", `approved as ${role}`, labelFor(data), auth.name);
     }
     for (const role of priorSignoffs.filter((r) => !newSignoffs.includes(r))) {
-      await logActivity("vendors", `revoked sign-off as ${role}`, labelFor(data), auth.name);
+      await logActivity(db, "vendors", `revoked sign-off as ${role}`, labelFor(data), auth.name);
     }
   }
 
-  await logActivity(entity, editingId ? "updated" : "created", labelFor(data), auth.name);
+  await logActivity(db, entity, editingId ? "updated" : "created", labelFor(data), auth.name);
   revalidatePath("/", "layout");
 
   if (entity === "team" && !editingId) {
     try {
-      await sendInviteEmail(data.name as string, data.email as string, data.role as string, data.inviteToken as string, auth.name);
+      await sendInviteEmail(db, auth.tenantSlug, data.name as string, data.email as string, data.role as string, data.inviteToken as string, auth.name);
     } catch (e) {
       console.error(e);
       return { ok: false, error: `Added, but we couldn't send the invite email — use "Resend invite" to try again` };
@@ -118,31 +119,33 @@ export async function saveRecord(entity: EntityKey, editingId: number | null, va
 export async function resendInvite(id: number): Promise<ActionResult> {
   const auth = await authorize(SCHEMA.team.area);
   if ("ok" in auth) return auth;
+  const { db } = auth;
 
-  const member = await prisma.teamMember.findUnique({ where: { id } });
+  const member = await db.teamMember.findUnique({ where: { id } });
   if (!member || member.status !== "Invited") return { ok: false, error: "This member isn't waiting on an invite" };
 
   const inviteToken = randomBytes(24).toString("hex");
-  await prisma.teamMember.update({ where: { id }, data: { inviteToken } });
+  await db.teamMember.update({ where: { id }, data: { inviteToken } });
 
   try {
-    await sendInviteEmail(member.name, member.email, member.role, inviteToken, auth.name);
+    await sendInviteEmail(db, auth.tenantSlug, member.name, member.email, member.role, inviteToken, auth.name);
   } catch (e) {
     console.error(e);
     return { ok: false, error: "We couldn't send the invite email right now — try again in a minute" };
   }
 
-  await logActivity("team", "resent invite to", member.name, auth.name);
+  await logActivity(db, "team", "resent invite to", member.name, auth.name);
   return { ok: true };
 }
 
 export async function deleteRecord(entity: EntityKey, id: number): Promise<ActionResult> {
   const auth = await authorize(SCHEMA[entity].area);
   if ("ok" in auth) return auth;
+  const { db } = auth;
   if (entity === "team" && id === auth.id) return { ok: false, error: "You can't remove yourself" };
-  const row = await delegate(entity).findUnique({ where: { id } });
-  await delegate(entity).delete({ where: { id } });
-  await logActivity(entity, "deleted", row ? labelFor(row) : "this record", auth.name);
+  const row = await delegate(db, entity).findUnique({ where: { id } });
+  await delegate(db, entity).delete({ where: { id } });
+  await logActivity(db, entity, "deleted", row ? labelFor(row) : "this record", auth.name);
   revalidatePath("/", "layout");
   return { ok: true };
 }

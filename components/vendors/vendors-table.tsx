@@ -27,6 +27,7 @@ export function sendTargetFor(v: Vendor, cycles: VendorRequest[]): SendTarget {
 }
 
 export function VendorsTable({
+  tenant,
   vendors,
   cycles,
   teamNames,
@@ -35,6 +36,7 @@ export function VendorsTable({
   initialSendId,
   org,
 }: {
+  tenant: string;
   vendors: Vendor[];
   cycles: VendorRequest[];
   teamNames: string[];
@@ -61,7 +63,7 @@ export function VendorsTable({
 
   function closeSend() {
     setSendTarget(null);
-    if (initialSendId != null) router.replace("/vendors", { scroll: false });
+    if (initialSendId != null) router.replace(`/${tenant}/vendors`, { scroll: false });
   }
 
   function confirmDelete() {
@@ -134,7 +136,7 @@ export function VendorsTable({
                   <tr key={v.id}>
                     <td>
                       <Link
-                        href={`/vendors/${v.id}`}
+                        href={`/${tenant}/vendors/${v.id}`}
                         className="sv-btn sv-btn--tertiary sv-btn--sm"
                         style={{ padding: 0, height: "auto", fontWeight: 600, color: "var(--sv-ink)" }}
                       >
@@ -176,7 +178,7 @@ export function VendorsTable({
                     <td>
                       <div className="rowact" style={{ justifyContent: "flex-end", alignItems: "center" }}>
                         {inFlight && latest ? (
-                          <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href={`/sent-requests/${latest.id}`}>
+                          <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href={`/${tenant}/sent-requests/${latest.id}`}>
                             <Icon name="send" size={14} />
                             View request
                           </Link>

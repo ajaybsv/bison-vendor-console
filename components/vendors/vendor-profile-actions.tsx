@@ -9,12 +9,14 @@ import { SCHEMA } from "@/lib/schema";
 import type { Vendor } from "@/lib/types";
 
 export function VendorProfileActions({
+  tenant,
   vendor,
   latest,
   teamNames,
   questionCounts,
   today,
 }: {
+  tenant: string;
   vendor: Vendor;
   latest: { id: number; status: string; sentOn: string; controlsSent: string[]; evidenceRequested: string[] } | null;
   teamNames: string[];
@@ -40,7 +42,7 @@ export function VendorProfileActions({
           {latest ? "Start reassessment" : "Build & send"}
         </button>
       ) : (
-        <Link className="sv-btn sv-btn--primary sv-btn--sm" href={`/sent-requests/${latest.id}`}>
+        <Link className="sv-btn sv-btn--primary sv-btn--sm" href={`/${tenant}/sent-requests/${latest.id}`}>
           <Icon name="send" size={14} />
           View current request
         </Link>

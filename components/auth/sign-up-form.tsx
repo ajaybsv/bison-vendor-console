@@ -10,10 +10,12 @@ import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/toast/toast-provider";
 
 export function SignUpForm({
+  tenant,
   token,
   orgName,
   invite,
 }: {
+  tenant: string;
   token: string;
   orgName: string;
   invite: { name: string; email: string; role: string };
@@ -28,10 +30,10 @@ export function SignUpForm({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const res = await completeSignup(token, name, password, confirm);
+      const res = await completeSignup(tenant, token, name, password, confirm);
       if (!res.ok) return showToast(res.error, "danger");
       showToast(`Welcome to BISON, ${name.trim() || invite.name}!`);
-      router.push("/dashboard");
+      router.push(`/${tenant}/dashboard`);
       router.refresh();
     });
   }
@@ -95,7 +97,7 @@ export function SignUpForm({
         Create account
       </button>
       <div className="auth-foot">
-        <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href="/sign-in">
+        <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href={`/${tenant}/sign-in`}>
           <Icon name="chevronLeft" size={14} />
           Back to sign in
         </Link>

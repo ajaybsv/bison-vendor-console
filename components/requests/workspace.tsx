@@ -23,12 +23,14 @@ function statusOf(a: Answer): AnswerStatus {
 }
 
 export function Workspace({
+  tenant,
   request: r,
   initialAnswers,
   questions,
   trustAnswers,
   evidence,
 }: {
+  tenant: string;
   request: ClientRequest;
   initialAnswers: Record<string, Answer>;
   questions: Question[];
@@ -280,15 +282,15 @@ export function Workspace({
                       <td>{e ? <FreshChip value={e.freshness} /> : <span className="sv-badge sv-badge--neutral">—</span>}</td>
                       <td>
                         {e?.freshness === "fresh" ? (
-                          <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href="/evidence">
+                          <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href={`/${tenant}/evidence`}>
                             Replace
                           </Link>
                         ) : e ? (
-                          <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href="/evidence">
+                          <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href={`/${tenant}/evidence`}>
                             Refresh in Trust Pack
                           </Link>
                         ) : (
-                          <Link className="sv-dropzone" style={{ padding: "var(--sv-space-2)", textDecoration: "none" }} href="/evidence">
+                          <Link className="sv-dropzone" style={{ padding: "var(--sv-space-2)", textDecoration: "none" }} href={`/${tenant}/evidence`}>
                             <Icon name="upload" size={16} />
                             Add to Trust Pack
                           </Link>
@@ -334,7 +336,7 @@ export function Workspace({
           Your responses and evidence have been sent back to the requester. You&apos;ll be notified when they review it.
         </div>
         <div style={{ marginTop: "var(--sv-space-5)" }}>
-          <Link className="sv-btn sv-btn--primary" href="/requests">
+          <Link className="sv-btn sv-btn--primary" href={`/${tenant}/requests`}>
             Back to requests
           </Link>
         </div>
@@ -389,7 +391,7 @@ export function Workspace({
 
   return (
     <div className="sv-page" ref={topRef}>
-      <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href="/requests" style={{ marginBottom: "var(--sv-space-3)" }}>
+      <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href={`/${tenant}/requests`} style={{ marginBottom: "var(--sv-space-3)" }}>
         <Icon name="chevronLeft" size={14} />
         Back to requests
       </Link>

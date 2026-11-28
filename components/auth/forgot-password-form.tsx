@@ -7,7 +7,7 @@ import { BisonLogo } from "@/components/brand/bison-logo";
 import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/toast/toast-provider";
 
-export function ForgotPasswordForm() {
+export function ForgotPasswordForm({ tenant }: { tenant: string }) {
   const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [sentTo, setSentTo] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export function ForgotPasswordForm() {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const res = await requestPasswordReset(email);
+      const res = await requestPasswordReset(tenant, email);
       if (!res.ok) return showToast(res.error, "danger");
       setSentTo(email.trim());
     });
@@ -24,7 +24,7 @@ export function ForgotPasswordForm() {
 
   const back = (
     <div className="auth-foot">
-      <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href="/sign-in">
+      <Link className="sv-btn sv-btn--tertiary sv-btn--sm" href={`/${tenant}/sign-in`}>
         <Icon name="chevronLeft" size={14} />
         Back to sign in
       </Link>
