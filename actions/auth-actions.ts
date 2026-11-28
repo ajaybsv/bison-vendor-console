@@ -22,6 +22,32 @@ export async function signOut(): Promise<void> {
   redirect(tenantSlug ? `/${tenantSlug}/sign-in` : "/");
 }
 
+/** Bootstraps the very first account for a freshly-provisioned tenant — only works while the
+ * tenant has no team members at all, so it can never be used to add a second account once the
+ * workspace has a real owner (invite them from Team & access instead). */
+export async function bootstrapFirstOwner(
+  tenantSlug: string,
+  name: string,
+  email: string,
+  password: string,
+  confirm: string
+): Promise<ActionResult> {
+  if (!name.trim()) return { ok: false, error: "Enter your name" };
+  if (!email.trim()) return { ok: false, error: "Enter your email" };
+  if (!password || !confirm) return { ok: false, error: "Set a password" };
+  if (password !== confirm) return { ok: false, error: "Passwords don't match" };
+  if (password.length < 8) return { ok: false, error: "Use at least 8 characters" };
+  const db = await dbForTenant(tenantSlug);
+  if (!db) return { ok: false, error: "This workspace isn't available right now" };
+  const existing = await db.teamMember.count();
+  if (existing > 0) return { ok: false, error: "This workspace already has an owner — sign in instead" };
+  const member = await db.teamMember.create({
+    data: { name: name.trim(), email: email.trim().toLowerCase(), role: "Owner", status: "Active", passwordHash: await hashPassword(password) },
+  });
+  await createSession(tenantSlug, db, member.id);
+  return { ok: true };
+}
+
 /** Accepting an invite: set the name and password, mark the member Active, sign them in. */
 export async function completeSignup(
   tenantSlug: string,

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Must match SESSION_COOKIE in lib/session.ts (proxy shouldn't import server modules).
 const SESSION_COOKIE = "bison_vendor_session";
-const PUBLIC_SEGMENTS = ["sign-in", "invite", "sign-up", "forgot-password", "reset-password"];
+const PUBLIC_SEGMENTS = ["sign-in", "invite", "sign-up", "forgot-password", "reset-password", "setup"];
 
 /** Optimistic check only: no cookie (or one for a different tenant) → this tenant's sign-in.
  * The console layout verifies the session against the right tenant's database, and every
