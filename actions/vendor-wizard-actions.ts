@@ -2,6 +2,7 @@
 
 import { logActivity } from "@/lib/activity";
 import { revalidatePath } from "next/cache";
+import { getOrganization } from "@/lib/data";
 import { authorize, type ActionResult } from "@/lib/session";
 import { WIZARD_STEPS } from "@/lib/vendor-wizard";
 
@@ -28,6 +29,7 @@ export async function createVendorFromWizard(values: WizardValues): Promise<Acti
   const auth = await authorize("vendors");
   if ("ok" in auth) return auth;
   const { db } = auth;
+  const org = await getOrganization(db);
 
   for (const step of WIZARD_STEPS) {
     for (const f of step.fields) {
@@ -78,7 +80,7 @@ export async function createVendorFromWizard(values: WizardValues): Promise<Acti
     type: "Other",
     criticality: "Medium",
     dataSensitivity: suggestDataSensitivity(values),
-    cadence: "Annually (12 months)",
+    cadence: org?.defaultReviewFrequency || "Annually (12 months)",
   };
 
   const created = await db.vendor.create({ data });

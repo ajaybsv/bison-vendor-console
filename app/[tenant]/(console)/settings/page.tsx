@@ -18,6 +18,10 @@ export default async function SettingsPage({ params }: PageProps<"/[tenant]/sett
         vendorType: org?.vendorType ?? "Payment Gateway",
         primaryContact: org?.primaryContact ?? "",
         address: org?.address ?? "",
+        organisationType: org?.organisationType ?? "",
+        isRbiRegulatedEntity: org?.isRbiRegulatedEntity ?? "",
+        nbfcLayer: org?.nbfcLayer ?? "",
+        defaultReviewFrequency: org?.defaultReviewFrequency ?? "Annually (12 months)",
       }}
       notifications={{
         notifReminders: org?.notifReminders ?? true,

@@ -33,6 +33,15 @@ model Organization {
   tierLimitedAlternativesTrigger String?
   approvalCeoTrigger            String?
   approvalBoardTrigger          String?
+  // ---- RBI/NBFC regulatory profile (1) — activates RBI outsourcing-specific context;
+  // left blank for organisations this doesn't apply to. ----
+  organisationType        String?
+  isRbiRegulatedEntity    String?
+  nbfcLayer               String?
+  // ---- Default review frequency (1) — the starting cadence for a new vendor (the wizard
+  // falls back to this instead of a hard-coded cadence); each vendor's own cadence can
+  // still be changed individually afterwards. ----
+  defaultReviewFrequency  String?
 
   @@map("organization")
 }

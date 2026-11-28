@@ -16,7 +16,7 @@ import { Checkbox, Select } from "@/components/ui/form";
 import { PageHead } from "@/components/ui/page-head";
 import { useToast } from "@/components/toast/toast-provider";
 import { BOARD_TRIGGERS, CEO_TRIGGERS } from "@/lib/approval";
-import { VENDOR_TYPES } from "@/lib/constants";
+import { NBFC_LAYERS, ORGANISATION_TYPES, REVIEW_FREQUENCIES, VENDOR_TYPES, YES_NO_NOTSURE } from "@/lib/constants";
 import { TIERS } from "@/lib/tiering";
 
 const NOTIFICATIONS: [NotificationKey, string][] = [
@@ -155,6 +155,44 @@ export function SettingsForm({
               Manage security
             </button>
           </div>
+        </div>
+      </div>
+      <div className="sv-card" style={{ marginTop: "var(--sv-space-5)" }}>
+        <div className="sv-card__eyebrow">Regulatory profile</div>
+        <div className="sv-body-sm" style={{ marginTop: -4 }}>
+          Activates RBI outsourcing-specific context where relevant — leave blank if it doesn&apos;t apply to your organisation.
+        </div>
+        <div className="grid g2">
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setOrgType">
+              Organisation type
+            </label>
+            <Select id="setOrgType" value={form.organisationType} options={ORGANISATION_TYPES} placeholder="Not set" onChange={set("organisationType")} />
+          </div>
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setRbiRe">
+              RBI Regulated Entity (RE)?
+            </label>
+            <Select id="setRbiRe" value={form.isRbiRegulatedEntity} options={YES_NO_NOTSURE} placeholder="Not set" onChange={set("isRbiRegulatedEntity")} />
+          </div>
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setNbfcLayer">
+              NBFC category / layer
+            </label>
+            <Select id="setNbfcLayer" value={form.nbfcLayer} options={NBFC_LAYERS} placeholder="Not set" onChange={set("nbfcLayer")} />
+          </div>
+          <div className="sv-field">
+            <label className="sv-field__label" htmlFor="setReviewFreq">
+              Default review frequency
+            </label>
+            <Select id="setReviewFreq" value={form.defaultReviewFrequency} options={REVIEW_FREQUENCIES} onChange={set("defaultReviewFrequency")} />
+            <div className="sv-field__hint">The starting reassessment cadence for a newly registered vendor; each vendor&apos;s cadence can still be changed individually.</div>
+          </div>
+        </div>
+        <div className="sv-card__footer" style={{ borderTop: 0, paddingTop: 0, justifyContent: "flex-end" }}>
+          <button className="sv-btn sv-btn--primary" onClick={save} disabled={pending}>
+            Save changes
+          </button>
         </div>
       </div>
       <div className="sv-card" style={{ marginTop: "var(--sv-space-5)" }}>

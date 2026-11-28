@@ -19,6 +19,15 @@ export const CONFIRMATION_AREAS = ["Finance / ERM", "Technology", "Information S
 
 export const VENDOR_TYPES = ["Payment Gateway", "Cloud", "SaaS", "Data centre"];
 
+/** RBI/NBFC regulatory profile (org onboarding, phase 1) — activates RBI outsourcing-specific
+ * context; organisations this doesn't apply to leave it unset. */
+export const ORGANISATION_TYPES = ["NBFC", "Bank", "FinTech", "RE", "Other"];
+export const YES_NO_NOTSURE = ["Yes", "No", "Not sure"];
+export const NBFC_LAYERS = ["Base Layer", "Middle Layer", "Upper Layer", "Top Layer", "Not applicable"];
+/** The starting cadence for a new vendor — same option set as a vendor's own reassessment
+ * cadence, so it's a real, usable default rather than a separate abstract model. */
+export const REVIEW_FREQUENCIES = ["Quarterly (3 months)", "Every 6 months", "Annually (12 months)"];
+
 export const ROLES = ["Owner", "Contributor", "Viewer"] as const;
 export type Role = (typeof ROLES)[number];
 

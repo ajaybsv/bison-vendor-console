@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/lib/activity";
 import { BOARD_TRIGGERS, CEO_TRIGGERS } from "@/lib/approval";
-import { VENDOR_TYPES } from "@/lib/constants";
+import { NBFC_LAYERS, ORGANISATION_TYPES, REVIEW_FREQUENCIES, VENDOR_TYPES, YES_NO_NOTSURE } from "@/lib/constants";
 import { authorize, type ActionResult } from "@/lib/session";
 import { TIERS } from "@/lib/tiering";
 import type { TenantDb } from "@/lib/types";
@@ -14,6 +14,10 @@ export type OrgProfile = {
   vendorType: string;
   primaryContact: string;
   address: string;
+  organisationType: string;
+  isRbiRegulatedEntity: string;
+  nbfcLayer: string;
+  defaultReviewFrequency: string;
 };
 
 export type NotificationKey = "notifReminders" | "notifDigest" | "notifExpiry";
@@ -42,6 +46,11 @@ export async function saveOrgProfile(profile: OrgProfile): Promise<ActionResult>
   const { db } = auth;
   if (!profile.name.trim()) return { ok: false, error: 'Fill in "Organization name"' };
   if (!VENDOR_TYPES.includes(profile.vendorType)) return { ok: false, error: "Pick a vendor type" };
+  if (profile.organisationType && !ORGANISATION_TYPES.includes(profile.organisationType)) return { ok: false, error: "Pick a valid organisation type" };
+  if (profile.isRbiRegulatedEntity && !YES_NO_NOTSURE.includes(profile.isRbiRegulatedEntity)) return { ok: false, error: "Pick a valid RE status" };
+  if (profile.nbfcLayer && !NBFC_LAYERS.includes(profile.nbfcLayer)) return { ok: false, error: "Pick a valid NBFC layer" };
+  if (profile.defaultReviewFrequency && !REVIEW_FREQUENCIES.includes(profile.defaultReviewFrequency))
+    return { ok: false, error: "Pick a valid review frequency" };
   const id = await orgId(db);
   const data = {
     name: profile.name.trim(),
@@ -49,6 +58,10 @@ export async function saveOrgProfile(profile: OrgProfile): Promise<ActionResult>
     vendorType: profile.vendorType,
     primaryContact: profile.primaryContact.trim() || null,
     address: profile.address.trim() || null,
+    organisationType: profile.organisationType || null,
+    isRbiRegulatedEntity: profile.isRbiRegulatedEntity || null,
+    nbfcLayer: profile.nbfcLayer || null,
+    defaultReviewFrequency: profile.defaultReviewFrequency || null,
   };
   if (id) await db.organization.update({ where: { id }, data });
   else await db.organization.create({ data });
