@@ -45,6 +45,7 @@ function delegate(db: TenantDb, entity: EntityKey) {
     team: db.teamMember,
     vendors: db.vendor,
     issues: db.issue,
+    incidents: db.incident,
   }[entity] as unknown as {
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
     update(args: { where: { id: number }; data: Record<string, unknown> }): Promise<unknown>;

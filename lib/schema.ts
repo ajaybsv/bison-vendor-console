@@ -2,7 +2,7 @@ import { ALL_APPROVER_ROLES } from "@/lib/approval";
 import { CONFIRMATION_AREAS, CONTROLS, EVI_TYPES, FRAMEWORKS, ROLES, type Area } from "@/lib/constants";
 import { TIERS } from "@/lib/tiering";
 
-export type EntityKey = "answers" | "evidence" | "team" | "vendors" | "issues";
+export type EntityKey = "answers" | "evidence" | "team" | "vendors" | "issues" | "incidents";
 
 export type Field = {
   k: string;
@@ -365,6 +365,41 @@ export const SCHEMA: Record<EntityKey, EntitySchema> = {
         t: "textarea",
         ph: "Evidence the remediation was completed and validated",
         editOnly: true,
+      },
+    ],
+  },
+  incidents: {
+    key: "incidents",
+    area: "vendors",
+    path: "/incidents",
+    nav: "Incidents & SLA",
+    singular: "incident",
+    intro: "Operational incidents and SLA breaches reported against a vendor — distinct from the security/compliance findings tracked in Issues & Exceptions.",
+    caption: "Incidents and SLA breach status",
+    columns: [
+      ["vendor", "Vendor"],
+      ["title", "Incident"],
+      ["severity", "Severity"],
+      ["slaBreached", "SLA breached"],
+      ["status", "Status"],
+    ],
+    fields: [
+      { k: "vendor", l: "Vendor", t: "select", req: true, optsFrom: "vendors" },
+      { k: "title", l: "Incident", t: "text", req: true, ph: "Payment API outage — 45 minutes" },
+      { k: "description", l: "Description", t: "textarea", ph: "What happened, and when" },
+      { k: "severity", l: "Severity", t: "select", req: true, opts: ["Critical", "High", "Medium", "Low"] },
+      { k: "slaBreached", l: "SLA breached?", t: "select", req: true, opts: ["Yes", "No", "Not applicable"] },
+      { k: "owner", l: "Internal owner", t: "select", req: true, optsFrom: "team", help: "Who is tracking this incident to resolution." },
+      { k: "startedAt", l: "Started", t: "date", today: true },
+      { k: "resolvedAt", l: "Resolved", t: "date" },
+      { k: "impactDescription", l: "Customer / business impact", t: "textarea", ph: "What customers or internal services were affected" },
+      {
+        k: "status",
+        l: "Status",
+        t: "select",
+        opts: ["Open", "Monitoring", "Resolved"],
+        editOnly: true,
+        def: "Open",
       },
     ],
   },

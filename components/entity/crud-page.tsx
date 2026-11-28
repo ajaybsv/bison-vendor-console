@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteRecord, resendInvite } from "@/actions/entity-actions";
 import { EntityFormDrawer } from "@/components/entity/entity-form-drawer";
-import { CatBadge, CriticalityChip, FreshChip, StatusChip } from "@/components/ui/badges";
+import { Badge, CatBadge, CriticalityChip, FreshChip, StatusChip } from "@/components/ui/badges";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { SearchInput } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
@@ -21,6 +21,14 @@ function Cell({ k, row }: { k: string; row: AnyRow }) {
   if (k === "severity") return <CriticalityChip value={v as string} />;
   if (k === "freshness") return <FreshChip value={String(v)} />;
   if (k === "role") return <CatBadge>{(v as string) || "—"}</CatBadge>;
+  if (k === "slaBreached")
+    return v === "Yes" ? (
+      <Badge tone="danger" icon="alertOctagon">
+        Yes
+      </Badge>
+    ) : (
+      <Badge tone="neutral">{(v as string) || "—"}</Badge>
+    );
   if (k === "control") return <span className="sv-code">{(v as string) || "—"}</span>;
   if (k === "q" || k === "a") return <span className="trunc">{(v as string) || "—"}</span>;
   if (k === "used") return <span className="sv-figure">{(v as number) ?? 0} req.</span>;

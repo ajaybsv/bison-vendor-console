@@ -3,7 +3,17 @@ import { AiAlert, FreshChip, MaterialityChip, ProgressBar, ReviewBadge, StatusCh
 import { LinkRow } from "@/components/ui/link-row";
 import { findConcentrations } from "@/lib/concentration";
 import { TRUST_PACK_QUESTION_TARGET } from "@/lib/constants";
-import { getOrganization, listClientRequests, listEvidence, listHistory, listIssues, listTrustAnswers, listVendorRequests, listVendors } from "@/lib/data";
+import {
+  getOrganization,
+  listClientRequests,
+  listEvidence,
+  listHistory,
+  listIncidents,
+  listIssues,
+  listTrustAnswers,
+  listVendorRequests,
+  listVendors,
+} from "@/lib/data";
 import { daysUntil, fmtDate, todayISO } from "@/lib/format";
 import { calculateMateriality } from "@/lib/materiality";
 import { requireUser } from "@/lib/session";
@@ -16,7 +26,7 @@ export default async function DashboardPage({ params }: PageProps<"/[tenant]/das
   const { tenant } = await params;
   const user = await requireUser(tenant);
   const { db } = user;
-  const [org, active, history, answers, evidence, vendors, cycles, issues] = await Promise.all([
+  const [org, active, history, answers, evidence, vendors, cycles, issues, incidents] = await Promise.all([
     getOrganization(db),
     listClientRequests(db),
     listHistory(db),
@@ -25,6 +35,7 @@ export default async function DashboardPage({ params }: PageProps<"/[tenant]/das
     listVendors(db),
     listVendorRequests(db),
     listIssues(db),
+    listIncidents(db),
   ]);
   const today = todayISO();
   const expiringSoon = evidence.filter((e) => e.freshness === "expiring");
@@ -52,6 +63,8 @@ export default async function DashboardPage({ params }: PageProps<"/[tenant]/das
   const tier1Count = vendorRisk.filter((r) => r.tier === "Tier 1 – Critical").length;
   const materialCount = vendorRisk.filter((r) => r.materiality === "Potential Material").length;
   const openIssues = issues.filter((i) => i.status !== "Closed");
+  const openIncidents = incidents.filter((i) => i.status !== "Resolved");
+  const slaBreaches = openIncidents.filter((i) => i.slaBreached === "Yes");
   const pendingApprovals = vendors.filter((v) => v.approvalStatus === "Not started" || v.approvalStatus === "In review").length;
 
   return (
@@ -191,6 +204,12 @@ export default async function DashboardPage({ params }: PageProps<"/[tenant]/das
           <div className="sv-card__eyebrow">Open issues</div>
           <div className="sv-stat" style={{ color: openIssues.length ? "var(--sv-warning)" : undefined }}>
             {openIssues.length}
+          </div>
+        </Link>
+        <Link className="sv-card" href={`/${tenant}/incidents`} style={{ textDecoration: "none", color: "inherit" }}>
+          <div className="sv-card__eyebrow">SLA breaches (open)</div>
+          <div className="sv-stat" style={{ color: slaBreaches.length ? "var(--sv-danger)" : undefined }}>
+            {slaBreaches.length}
           </div>
         </Link>
       </div>

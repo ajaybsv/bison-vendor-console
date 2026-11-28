@@ -94,7 +94,7 @@ async function main() {
   // Fixed ids are referenced across tables (sourceAnswerId, vendorId), so restart sequences too.
   await prisma.$executeRawUnsafe(
     `TRUNCATE organization, team_members, sessions, client_requests, workspace_answers, history, trust_answers,
-     evidence_items, questions, vendors, vendor_requests, vendor_responses, vendor_request_evidence, issues, activity_log
+     evidence_items, questions, vendors, vendor_requests, vendor_responses, vendor_request_evidence, issues, incidents, activity_log
      RESTART IDENTITY CASCADE`
   );
 
@@ -367,6 +367,32 @@ async function main() {
       },
     });
   }
+
+  await prisma.incident.createMany({
+    data: [
+      {
+        vendor: "Nimbus Cloud Infrastructure", title: "Payment gateway API — elevated latency", severity: "High",
+        slaBreached: "Yes", status: "Resolved", owner: "Sneha Iyer",
+        startedAt: "2026-09-02", resolvedAt: "2026-09-02",
+        description: "p99 API latency exceeded 4s for 55 minutes during a peak settlement window, triggering the 99.9% uptime SLA breach clause.",
+        impactDescription: "Approximately 12,000 transactions delayed by 2–6 seconds; no failed payments, service credit requested under contract.",
+      },
+      {
+        vendor: "Nimbus Cloud Infrastructure", title: "Scheduled maintenance window overrun", severity: "Low",
+        slaBreached: "No", status: "Resolved", owner: "Sneha Iyer",
+        startedAt: "2026-06-18", resolvedAt: "2026-06-18",
+        description: "Pre-notified maintenance ran 20 minutes past its announced window.",
+        impactDescription: "No customer-facing impact; internal monitoring dashboards briefly unavailable.",
+      },
+      {
+        vendor: "VerifyChain KYC Services", title: "KYC document upload failures", severity: "Medium",
+        slaBreached: "Not applicable", status: "Monitoring", owner: "Rahul Mehta",
+        startedAt: "2026-11-20", resolvedAt: null,
+        description: "Intermittent 500 errors on the document upload endpoint affecting roughly 3% of onboarding sessions.",
+        impactDescription: "A small share of new customer onboarding attempts needed a retry; vendor has deployed a fix and is being monitored.",
+      },
+    ],
+  });
 
   console.log(`Seeded. Sign in as rahul@paybridge.in / ${DEMO_PASSWORD}`);
 }

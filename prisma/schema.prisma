@@ -339,6 +339,28 @@ model Issue {
   @@map("issues")
 }
 
+// ---------- Incidents & SLA tracking (9) ----------
+
+/// An operational incident or SLA breach reported against a vendor — distinct from a
+/// security/compliance finding (Issue): this tracks service disruption, not remediation.
+/// `vendor` is the vendor's name, stored plainly, matching Issue's own convention.
+model Incident {
+  id                Int      @id @default(autoincrement())
+  vendor            String
+  title             String
+  description       String?
+  severity          String
+  slaBreached       String   @default("No")
+  status            String   @default("Open")
+  owner             String
+  startedAt         String?
+  resolvedAt        String?
+  impactDescription String?
+  createdAt         DateTime @default(now())
+
+  @@map("incidents")
+}
+
 // ---------- Activity log (12) — written alongside every save/delete; shared across entities,
 // matching the admin console's convention. ----------
 

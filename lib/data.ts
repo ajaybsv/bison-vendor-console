@@ -4,7 +4,7 @@ import type { Member, NavCounts, TenantDb } from "@/lib/types";
 const memberSelect = { id: true, name: true, email: true, role: true, status: true } as const;
 
 export async function navCounts(db: TenantDb): Promise<NavCounts> {
-  const [requests, history, answers, evidence, vendors, sentrequests, issues, team] = await Promise.all([
+  const [requests, history, answers, evidence, vendors, sentrequests, issues, incidents, team] = await Promise.all([
     db.clientRequest.count(),
     db.historyEntry.count(),
     db.trustAnswer.count(),
@@ -12,9 +12,10 @@ export async function navCounts(db: TenantDb): Promise<NavCounts> {
     db.vendor.count(),
     db.vendorRequest.count(),
     db.issue.count(),
+    db.incident.count({ where: { status: { not: "Resolved" } } }),
     db.teamMember.count(),
   ]);
-  return { requests, history, answers, evidence, vendors, sentrequests, issues, team };
+  return { requests, history, answers, evidence, vendors, sentrequests, issues, incidents, team };
 }
 
 export function getOrganization(db: TenantDb) {
@@ -98,4 +99,9 @@ export function getVendorRequest(db: TenantDb, id: number) {
 /* ---------- issues & exceptions ---------- */
 export function listIssues(db: TenantDb) {
   return db.issue.findMany({ orderBy: { id: "desc" } });
+}
+
+/* ---------- incidents & SLA tracking ---------- */
+export function listIncidents(db: TenantDb) {
+  return db.incident.findMany({ orderBy: { id: "desc" } });
 }
