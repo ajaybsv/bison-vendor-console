@@ -97,10 +97,10 @@ export function VendorsTable({
       <div className="toolbar">
         <SearchInput value={query} placeholder="Search vendors" onChange={setQuery} />
         <div style={{ flex: 1 }} />
-        <button className="sv-btn sv-btn--primary" onClick={() => setDrawer({ open: true, row: null })}>
+        <Link className="sv-btn sv-btn--primary" href={`/${tenant}/vendors/new`}>
           <Icon name="plus" size={16} />
           Add Vendor
-        </button>
+        </Link>
       </div>
       <div className="sv-table__scroll">
         {rows.length === 0 ? (

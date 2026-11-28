@@ -220,6 +220,30 @@ model Vendor {
   exitTransitionDate   String?
   dataReturnStatus     String?
   exitClosureEvidence  String?
+  // ---- Vendor Registration wizard (2) — the business-friendly intake questions behind the
+  // guided sign-up flow. Optional: vendors created before this existed, or edited directly via
+  // the flat form, simply leave these blank. ----
+  brandName               String?
+  businessFunction        String?
+  mainPurpose              String?
+  supportsCustomerJourney String?
+  customerFacing          String?
+  connectsToSystems       String?
+  providesHostingOrSoftware String?
+  providesSecurityMonitoring String?
+  handlesCustomerData     String?
+  dataCategories          String[]        @default([])
+  dataHandlingActions     String[]        @default([])
+  processesOnBehalf       String?
+  usesSubcontractor       String?
+  operatesCrossBorder     String?
+  customerImpactDescription String?
+  replacementCostEstimate String?
+  replacementTimeMonths   String?
+  regulatoryCoreNeed      String?
+  contractEndDate         String?
+  contractValue           String?
+  knownRegulatoryRequirement String?
   createdAt           DateTime        @default(now())
   requests            VendorRequest[]
 
